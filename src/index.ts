@@ -20,6 +20,7 @@ import "@babylonjs/core/Helpers/sceneHelpers";
 
 // Import debug layer
 import "@babylonjs/inspector";
+import { WebXRControllerComponent } from "@babylonjs/core/XR/motionController";
 
 
 /******* Start of the Game class ******/
@@ -120,20 +121,6 @@ class Game
         // Default intensity is 1. Let's dim the light a small amount
         light.intensity = 0.7;
 
-        // Our built-in 'sphere' shape.
-        var sphere = MeshBuilder.CreateSphere("sphere", {diameter: 1, segments: 32}, this.scene);
-        sphere.position = new Vector3(-1, 1.6, 2);
-
-        // Use an instanced mesh to efficiently create a copy of an object
-        var sphereCopy = new InstancedMesh("sphereCopy", sphere);
-        sphereCopy.position = new Vector3(1, 1.6, 2)
-        sphereCopy.scaling = new Vector3(1, 2, 1);
-
-        // Any modifications to the original Mesh also changes the InstancedMesh
-        var cubeMaterial = new StandardMaterial("blueMaterial", this.scene);
-        cubeMaterial.diffuseColor = new Color3(0, 0, 1);
-        sphere.material = cubeMaterial;
-
         // Show the debug layer
         this.scene.debugLayer.show();
     }
@@ -142,6 +129,42 @@ class Game
     private update() : void
     {
 
+    }
+
+    private processControllerInput()
+    {
+        this.onLeftTrigger(this.leftController?.motionController?.getComponent("xr-standard-trigger"));
+        this.onRightTrigger(this.rightController?.motionController?.getComponent("xr-standard-trigger"));
+    }
+
+    private onLeftTrigger(component?: WebXRControllerComponent)
+    {
+        if(component?.changes.pressed)
+        {
+            if(component?.pressed)
+            {
+                Logger.Log("left trigger pressed");
+            }
+            else
+            {
+                Logger.Log("left trigger released");
+            }
+        }
+    }
+
+    private onRightTrigger(component?: WebXRControllerComponent)
+    {
+        if(component?.changes.pressed)
+        {
+            if(component?.pressed)
+            {
+                Logger.Log("right trigger pressed");
+            }
+            else
+            {
+                Logger.Log("right trigger released");
+            }
+        }
     }
 
 }
