@@ -14,9 +14,16 @@ import { MeshBuilder } from  "@babylonjs/core/Meshes/meshBuilder";
 import { InstancedMesh } from "@babylonjs/core/Meshes/instancedMesh";
 import { StandardMaterial} from "@babylonjs/core/Materials/standardMaterial";
 import { Logger } from "@babylonjs/core/Misc/logger";
+import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
+import { SceneLoader } from "@babylonjs/core/Loading/sceneLoader";
+import {Mesh} from "@babylonjs/core";
+import { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
+import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
 
 // Side effects
 import "@babylonjs/core/Helpers/sceneHelpers";
+import "@babylonjs/loaders/OBJ/objFileLoader"
+import "@babylonjs/loaders/glTF/2.0/glTFLoader"
 
 // Import debug layer
 import "@babylonjs/inspector";
@@ -33,6 +40,9 @@ class Game
     private xrCamera: WebXRCamera | null;
     private leftController: WebXRInputSource | null;
     private rightController: WebXRInputSource | null;
+	
+	private drawingCanvas: Mesh | null;
+	private worldNode: TransformNode | null;
 
     constructor()
     {
@@ -49,6 +59,9 @@ class Game
         this.xrCamera = null;
         this.leftController = null;
         this.rightController = null;
+		this.drawingCanvas = null;
+		this.worldNode = null;
+		
     }
 
     start() : void
@@ -89,7 +102,20 @@ class Game
 
         // Assign the xrCamera to a member variable
         this.xrCamera = xrHelper.baseExperience.camera;
-
+		
+		this.worldNode = new TransformNode("world node");
+        this.worldNode.position =  this.xrCamera.position;
+		this.worldNode.setParent(this.xrCamera);
+		
+		 var sphere = MeshBuilder.CreateSphere("sphere", {diameter: 0.5, segments: 32}, this.scene);
+		sphere.position = new Vector3(0, 1.6, 5);
+		sphere.setParent(this.worldNode);
+		
+		
+		var plane = MeshBuilder.CreatePlane("plane", {size:2}, this.scene);
+		plane.position = new Vector3(0, 1.6, 5);
+		this.drawingCanvas = plane;
+		this.drawingCanvas.setParent(this.worldNode);
         // Assigns the controllers
         xrHelper.input.onControllerAddedObservable.add((inputSource) =>
         {
@@ -102,7 +128,8 @@ class Game
                 this.rightController = inputSource;
             }
         });
-
+        
+		 var assetsManager = new AssetsManager(this.scene);
         // Creates a default skybox
         const environment = this.scene.createDefaultEnvironment({
             createGround: true,
@@ -110,7 +137,7 @@ class Game
             skyboxSize: 50,
             skyboxColor: new Color3(0, 0, 0)
         });
-
+         assetsManager.load();
         // Make sure the environment and skybox is not pickable!
         environment!.ground!.isPickable = false;
         environment!.skybox!.isPickable = false;
@@ -128,7 +155,7 @@ class Game
     // The main update loop will be executed once per frame before the scene is rendered
     private update() : void
     {
-
+      this.processControllerInput();  
     }
 
     private processControllerInput()
