@@ -126,15 +126,6 @@ class Game
 		this.worldNode = new TransformNode("world node");
         this.worldNode.position =  this.xrCamera.position;
 		this.worldNode.setParent(this.xrCamera);
-		
-		/* var sphere = MeshBuilder.CreateSphere("sphere", {diameter: 0.5, segments: 32}, this.scene);
-		sphere.position = new Vector3(0, 1.6, 5);
-		sphere.setParent(this.worldNode);*/
-		
-
-		var sphere = MeshBuilder.CreateSphere("sphere", {diameter: 0.5, segments: 32}, this.scene);
-		sphere.position = new Vector3(0, 1.6, 3);
-		sphere.setParent(this.worldNode);
 
 		var plane = MeshBuilder.CreatePlane("plane", {size:2}, this.scene);
         plane.position = new Vector3(0, 1.6, 5);
