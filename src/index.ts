@@ -107,9 +107,9 @@ class Game
         this.worldNode.position =  this.xrCamera.position;
 		this.worldNode.setParent(this.xrCamera);
 		
-		 var sphere = MeshBuilder.CreateSphere("sphere", {diameter: 0.5, segments: 32}, this.scene);
+		/* var sphere = MeshBuilder.CreateSphere("sphere", {diameter: 0.5, segments: 32}, this.scene);
 		sphere.position = new Vector3(0, 1.6, 5);
-		sphere.setParent(this.worldNode);
+		sphere.setParent(this.worldNode);*/
 		
 		
 		var plane = MeshBuilder.CreatePlane("plane", {size:2}, this.scene);
