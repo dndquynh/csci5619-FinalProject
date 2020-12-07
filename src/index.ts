@@ -5,19 +5,17 @@
 
 import { Engine } from "@babylonjs/core/Engines/engine";
 import { Scene } from "@babylonjs/core/scene";
-import { Vector3, Color3 } from "@babylonjs/core/Maths/math";
+import { Vector3, Color3, Matrix } from "@babylonjs/core/Maths/math";
 import { UniversalCamera } from "@babylonjs/core/Cameras/universalCamera";
 import { WebXRInputSource } from "@babylonjs/core/XR/webXRInputSource";
 import { WebXRCamera } from "@babylonjs/core/XR/webXRCamera";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import { MeshBuilder } from  "@babylonjs/core/Meshes/meshBuilder";
-import { InstancedMesh } from "@babylonjs/core/Meshes/instancedMesh";
 import { StandardMaterial} from "@babylonjs/core/Materials/standardMaterial";
 import { Logger } from "@babylonjs/core/Misc/logger";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 import { SceneLoader } from "@babylonjs/core/Loading/sceneLoader";
-import {Mesh} from "@babylonjs/core";
-import { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
+import {DynamicTexture, LinesMesh, Mesh, Ray} from "@babylonjs/core";
 import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
 
 // Side effects
@@ -40,9 +38,15 @@ class Game
     private xrCamera: WebXRCamera | null;
     private leftController: WebXRInputSource | null;
     private rightController: WebXRInputSource | null;
-	
+
 	private drawingCanvas: Mesh | null;
-	private worldNode: TransformNode | null;
+    private worldNode: TransformNode | null;
+    private dynamicTexture: DynamicTexture | null;
+    private ctx: CanvasRenderingContext2D | null;
+    private painting: Boolean;
+
+    private laserPointer: LinesMesh | null;
+
 
     constructor()
     {
@@ -60,8 +64,12 @@ class Game
         this.leftController = null;
         this.rightController = null;
 		this.drawingCanvas = null;
-		this.worldNode = null;
-		
+        this.worldNode = null;
+        this.laserPointer = null;
+        this.dynamicTexture = null;
+        this.ctx = null;
+
+        this.painting = false;
     }
 
     start() : void
@@ -102,7 +110,19 @@ class Game
 
         // Assign the xrCamera to a member variable
         this.xrCamera = xrHelper.baseExperience.camera;
-		
+
+        // Create points for the laser pointer
+        var laserPoints = [];
+        laserPoints.push(new Vector3(0, 0, 0));
+        laserPoints.push(new Vector3(0, 0, 10));
+
+        // Create a laser pointer and make sure it is not pickable
+        this.laserPointer = MeshBuilder.CreateLines("laserPointer", {points: laserPoints}, this.scene);
+        this.laserPointer.color = Color3.Blue();
+        this.laserPointer.alpha = .5;
+        this.laserPointer.visibility = 0;
+        this.laserPointer.isPickable = false;
+
 		this.worldNode = new TransformNode("world node");
         this.worldNode.position =  this.xrCamera.position;
 		this.worldNode.setParent(this.xrCamera);
@@ -111,24 +131,56 @@ class Game
 		sphere.position = new Vector3(0, 1.6, 5);
 		sphere.setParent(this.worldNode);*/
 		
-		
+
+		var sphere = MeshBuilder.CreateSphere("sphere", {diameter: 0.5, segments: 32}, this.scene);
+		sphere.position = new Vector3(0, 1.6, 3);
+		sphere.setParent(this.worldNode);
+
 		var plane = MeshBuilder.CreatePlane("plane", {size:2}, this.scene);
-		plane.position = new Vector3(0, 1.6, 5);
+        plane.position = new Vector3(0, 1.6, 5);
+        plane.isPickable = true;
 		this.drawingCanvas = plane;
-		this.drawingCanvas.setParent(this.worldNode);
+        this.drawingCanvas.setParent(this.worldNode);
+
+        // Dynamic texture for drawing canvas
+        this.dynamicTexture = new DynamicTexture("dynamic texture", {width: 300, height: 300}, this.scene, false);
+        var canvasMaterial = new StandardMaterial("canvas material", this.scene);
+        canvasMaterial.diffuseTexture = this.dynamicTexture;
+        this.drawingCanvas.material = canvasMaterial;
+        canvasMaterial.emissiveColor = Color3.White();
+
+        this.ctx = this.dynamicTexture.getContext();
+        plane.enableEdgesRendering();
+
         // Assigns the controllers
         xrHelper.input.onControllerAddedObservable.add((inputSource) =>
         {
             if(inputSource.uniqueId.endsWith("left"))
             {
                 this.leftController = inputSource;
+                this.laserPointer!.parent = this.leftController.pointer;
+                this.laserPointer!.visibility = 1;
             }
             else
             {
                 this.rightController = inputSource;
             }
         });
-        
+
+        // Don't forget to deparent the laser pointer or it will be destroyed!
+        xrHelper.input.onControllerRemovedObservable.add((inputSource) => {
+
+            if(inputSource.uniqueId.endsWith("right"))
+            {
+                // this.laserPointer!.parent = null;
+                // this.laserPointer!.visibility = 0;
+            }
+            if (inputSource.uniqueId.endsWith("left")) {
+                this.laserPointer!.parent = null;
+                this.laserPointer!.visibility = 0;
+            }
+        });
+
 		 var assetsManager = new AssetsManager(this.scene);
         // Creates a default skybox
         const environment = this.scene.createDefaultEnvironment({
@@ -152,10 +204,24 @@ class Game
         this.scene.debugLayer.show();
     }
 
+    private draw(posX: number, posY: number) {
+        console.log(posX, posY);
+        if (!this.painting) return;
+        Logger.Log("drawing");
+        this.ctx!.strokeStyle = "red";
+        this.ctx!.lineWidth = 10;
+        this.ctx!.lineCap = "round";
+        this.ctx!.lineTo(posX, posY);
+        this.ctx!.stroke();
+        this.ctx!.beginPath();
+        this.ctx!.moveTo(posX, posY);
+        this.dynamicTexture!.update();
+    }
+
     // The main update loop will be executed once per frame before the scene is rendered
     private update() : void
     {
-      this.processControllerInput();  
+      this.processControllerInput();
     }
 
     private processControllerInput()
@@ -166,16 +232,49 @@ class Game
 
     private onLeftTrigger(component?: WebXRControllerComponent)
     {
-        if(component?.changes.pressed)
+        if (component?.pressed)
         {
-            if(component?.pressed)
-            {
-                Logger.Log("left trigger pressed");
+            Logger.Log("left trigger pressed");
+            this.laserPointer!.color = Color3.Green();
+
+            var ray = new Ray(this.leftController!.pointer.position, this.leftController!.pointer.forward, 10);
+            var pickInfo = this.scene.pickWithRay(ray);
+            console.log(pickInfo);
+
+            if (pickInfo?.hit) {
+                Logger.Log(pickInfo!.pickedMesh!.name);
+                if (pickInfo!.pickedMesh && pickInfo!.pickedMesh!.name == "plane") {
+                    Logger.Log("ray hit canvas");
+                    if (!this.painting) {
+                        this.painting = true;
+                    }
+
+                    var canvasPos = this.drawingCanvas!.getAbsolutePosition();
+                    var pickPos = pickInfo!.pickedPoint;
+                    var drawingPos = pickPos!.subtract(canvasPos);
+                    console.log("draw" + drawingPos);
+
+                    // Convert to the drawing canvas local space
+                    var m = new Matrix();
+                    this.drawingCanvas?.getWorldMatrix().invertToRef(m);
+                    canvasPos = Vector3.TransformCoordinates(canvasPos, m);
+                    pickPos = Vector3.TransformCoordinates(pickPos!, m);
+                    drawingPos = pickPos!.subtract(canvasPos);
+                    console.log('canvas' + canvasPos);
+                    console.log('picked' + pickPos);
+                    console.log("draw" + drawingPos);
+
+                    this.draw(drawingPos.x * 150 + 150, -drawingPos.y * 150 + 150);
+                } else {
+                    this.painting = false;
+                    this.ctx!.beginPath();
+                }
             }
-            else
-            {
-                Logger.Log("left trigger released");
-            }
+        }
+        else
+        {
+            this.painting = false;
+            this.ctx!.beginPath();
         }
     }
 
