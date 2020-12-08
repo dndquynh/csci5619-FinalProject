@@ -155,6 +155,8 @@ class Game
             else
             {
                 this.rightController = inputSource;
+				this.laserPointer!.parent = this.rightController.pointer;
+                this.laserPointer!.visibility = 1;
             }
         });
 
@@ -163,6 +165,8 @@ class Game
 
             if(inputSource.uniqueId.endsWith("right"))
             {
+				this.laserPointer!.parent = null;
+                this.laserPointer!.visibility = 0;
                 // this.laserPointer!.parent = null;
                 // this.laserPointer!.visibility = 0;
             }
@@ -271,19 +275,52 @@ class Game
 
     private onRightTrigger(component?: WebXRControllerComponent)
     {
-        if(component?.changes.pressed)
-        {
-            if(component?.pressed)
-            {
+          if(component?.pressed)
+          {
                 Logger.Log("right trigger pressed");
-            }
-            else
-            {
-                Logger.Log("right trigger released");
-            }
-        }
-    }
+				this.laserPointer!.color = Color3.Blue();
 
+            var ray = new Ray(this.rightController!.pointer.position, this.rightController!.pointer.forward, 10);
+            var pickInfo = this.scene.pickWithRay(ray);
+            console.log(pickInfo);
+
+            if (pickInfo?.hit) {
+                Logger.Log(pickInfo!.pickedMesh!.name);
+                if (pickInfo!.pickedMesh && pickInfo!.pickedMesh!.name == "plane") {
+                    Logger.Log("ray hit canvas");
+                    if (!this.painting) {
+                        this.painting = true;
+                    }
+
+                    var canvasPos = this.drawingCanvas!.getAbsolutePosition();
+                    var pickPos = pickInfo!.pickedPoint;
+                    var drawingPos = pickPos!.subtract(canvasPos);
+                    console.log("draw" + drawingPos);
+
+                    // Convert to the drawing canvas local space
+                    var m = new Matrix();
+                    this.drawingCanvas?.getWorldMatrix().invertToRef(m);
+                    canvasPos = Vector3.TransformCoordinates(canvasPos, m);
+                    pickPos = Vector3.TransformCoordinates(pickPos!, m);
+                    drawingPos = pickPos!.subtract(canvasPos);
+                    console.log('canvas' + canvasPos);
+                    console.log('picked' + pickPos);
+                    console.log("draw" + drawingPos);
+
+                    this.draw(drawingPos.x * 150 + 150, -drawingPos.y * 150 + 150);
+                 } else {
+                    this.painting = false;
+                    this.ctx!.beginPath();
+                }
+              }
+            }
+       else
+       {
+		  Logger.Log("right trigger released");
+		  this.painting = false;
+          this.ctx!.beginPath();
+       }
+    }
 }
 /******* End of the Game class ******/
 
