@@ -5,10 +5,11 @@
     "main": "index.ts",
     "dependencies": {
         "@babylonjs/core": "^4.1",
-        "@babylonjs/materials": "^4.1",
         "@babylonjs/inspector": "^4.1",
-        "cannon": "^0.6.2",
-        "@types/cannon": "^0.1.4"
+        "@babylonjs/materials": "^4.1",
+        "@tensorflow/tfjs": "^2.7.0",
+        "@types/cannon": "^0.1.4",
+        "cannon": "^0.6.2"
     },
     "devDependencies": {
         "@typescript-eslint/eslint-plugin": "^2.30.0",

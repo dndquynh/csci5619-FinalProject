@@ -5,7 +5,7 @@
 
 import { Engine } from "@babylonjs/core/Engines/engine";
 import { Scene } from "@babylonjs/core/scene";
-import { Vector3, Color3, Matrix } from "@babylonjs/core/Maths/math";
+import { Vector3, Color3, Matrix, Vector2 } from "@babylonjs/core/Maths/math";
 import { UniversalCamera } from "@babylonjs/core/Cameras/universalCamera";
 import { WebXRInputSource } from "@babylonjs/core/XR/webXRInputSource";
 import { WebXRCamera } from "@babylonjs/core/XR/webXRCamera";
@@ -17,6 +17,10 @@ import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 import { SceneLoader } from "@babylonjs/core/Loading/sceneLoader";
 import {DynamicTexture, LinesMesh, Mesh, Ray} from "@babylonjs/core";
 import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
+import { GUI3DManager } from "@babylonjs/gui/3D/gui3DManager"
+import { Button3D } from "@babylonjs/gui/3D/controls/button3D"
+import { HolographicButton } from "@babylonjs/gui/3D/controls/holographicButton"
+import { TextBlock } from "@babylonjs/gui/2D/controls/textBlock"
 
 // Side effects
 import "@babylonjs/core/Helpers/sceneHelpers";
@@ -26,6 +30,10 @@ import "@babylonjs/loaders/glTF/2.0/glTFLoader"
 // Import debug layer
 import "@babylonjs/inspector";
 import { WebXRControllerComponent } from "@babylonjs/core/XR/motionController";
+
+import * as tf from '@tensorflow/tfjs';
+import { LayersModel } from "@tensorflow/tfjs";
+
 
 
 /******* Start of the Game class ******/
@@ -47,6 +55,9 @@ class Game
 
     private laserPointer: LinesMesh | null;
 
+    private model: LayersModel | null;
+    private points: Array<Vector2>;
+    private objectNames: Array<String>;
 
     constructor()
     {
@@ -70,6 +81,11 @@ class Game
         this.ctx = null;
 
         this.painting = false;
+
+        // ML
+        this.model = null;
+        this.points = [];
+        this.objectNames = ['table',  'star', 'flower', 'circle', 'cat']
     }
 
     start() : void
@@ -132,6 +148,7 @@ class Game
         plane.isPickable = true;
 		this.drawingCanvas = plane;
         this.drawingCanvas.setParent(this.worldNode);
+        this.drawingCanvas.position.y = -1;
 
         // Dynamic texture for drawing canvas
         this.dynamicTexture = new DynamicTexture("dynamic texture", {width: 300, height: 300}, this.scene, false);
@@ -185,6 +202,52 @@ class Game
             skyboxColor: new Color3(0, 0, 0)
         });
          assetsManager.load();
+
+        // The manager automates some of the GUI creation steps
+        var guiManager = new GUI3DManager(this.scene);
+
+        // Create a test button
+        var testButton = new Button3D("testButton");
+        guiManager.addControl(testButton);
+
+        // This must be done after addControl to overwrite the default content
+        testButton.position = new Vector3(0, 1.6, 3);
+        testButton.scaling.y = .5;
+
+        // Link a transform node so we can move the button around
+        var testButtonTransform = new TransformNode("testButtonTransform", this.scene);
+        testButtonTransform.rotation.y = 15 * Math.PI / 180;
+        testButton.linkToTransformNode(testButtonTransform);
+
+        // Create the test button text
+        var testButtonText = new TextBlock();
+        testButtonText.text = "Predict";
+        testButtonText.color = "white";
+        testButtonText.fontSize = 24;
+        testButtonText.scaleY = 2;
+        testButton.content = testButtonText;
+
+
+        // Type cast the button material so we can change the color
+        var testButtonMaterial = <StandardMaterial>testButton.mesh!.material;
+
+        // Custom background color
+        var backgroundColor = new Color3(.284, .73, .831);
+        testButtonMaterial.diffuseColor = backgroundColor;
+        testButton.pointerOutAnimation = () => {
+            testButtonMaterial.diffuseColor = backgroundColor;
+        }
+
+        // Custom hover color
+        var hoverColor = new Color3(.752, .53, .735);
+        testButton.pointerEnterAnimation = () => {
+            testButtonMaterial.diffuseColor = hoverColor;
+        }
+
+        //  Make prediction
+        testButton.onPointerDownObservable.add(() => {
+            this.predictResult();
+        });
         // Make sure the environment and skybox is not pickable!
         environment!.ground!.isPickable = false;
         environment!.skybox!.isPickable = false;
@@ -197,6 +260,9 @@ class Game
 
         // Show the debug layer
         this.scene.debugLayer.show();
+
+        // Load tensorflow model
+        this.model = await tf.loadLayersModel('ML/model/model.json');
     }
 
     private draw(posX: number, posY: number) {
@@ -212,6 +278,87 @@ class Game
         this.ctx!.moveTo(posX, posY);
         this.dynamicTexture!.update();
     }
+
+    // https://github.com/zaidalyafeai/zaidalyafeai.github.io/blob/master/sketcher/main.js
+    private getBoundingBox() {
+        //get coordinates
+        var coorX = this.points.map(function(p) {
+            return p.x
+        });
+        var coorY = this.points.map(function(p) {
+            return p.y
+        });
+
+        //find top left and bottom right corners
+        var min_coords = {
+            x: Math.min.apply(null, coorX),
+            y: Math.min.apply(null, coorY)
+        }
+        var max_coords = {
+            x: Math.max.apply(null, coorX),
+            y: Math.max.apply(null, coorY)
+        }
+
+        //return as struct
+        return {
+            min: min_coords,
+            max: max_coords
+        }
+    }
+
+    private getImageData() {
+        //get the minimum bounding box around the drawing
+        const minBoundingBox = this.getBoundingBox()
+
+        //get image data according to dpi
+        const dpi = window.devicePixelRatio
+        const imgData = this.ctx!.getImageData(minBoundingBox.min.x * dpi, minBoundingBox.min.y * dpi,
+                                                      (minBoundingBox.max.x - minBoundingBox.min.x) * dpi, (minBoundingBox.max.y - minBoundingBox.min.y) * dpi);
+        return imgData
+    }
+
+    private preprocess(imgData: ImageData) {
+        return tf.tidy(() => {
+            //convert to a tensor
+            let tensor = tf.browser.fromPixels(imgData, 1)
+
+            //resize
+            const resized = tf.image.resizeBilinear(tensor, [28, 28]).toFloat()
+
+            //normalize
+            const offset = tf.scalar(255.0);
+            const normalized = tf.scalar(1.0).sub(resized.div(offset));
+
+            //We add a dimension to get a batch shape
+            const batched = normalized.expandDims(0)
+            return batched
+        })
+    }
+
+    private predictResult() {
+        //make sure we have at least two recorded coordinates
+        if (this.points.length >= 2) {
+
+            //get the image data from the canvas
+            const imgData = this.getImageData()
+
+            //get the prediction
+            const pred = (<tf.Tensor>this.model!.predict(this.preprocess(imgData))).dataSync()
+
+            var maxIndex = 0;
+            for (var i = 0; i < pred.length; i++) {
+                if (pred[i] > pred[maxIndex]) {
+                    maxIndex = i;
+                }
+            }
+            console.log(this.objectNames[maxIndex]);
+            return this.objectNames[maxIndex];
+        } else {
+            console.log("Not enough data");
+            return;
+        }
+    }
+
 
     // The main update loop will be executed once per frame before the scene is rendered
     private update() : void
@@ -260,6 +407,7 @@ class Game
                     console.log("draw" + drawingPos);
 
                     this.draw(drawingPos.x * 150 + 150, -drawingPos.y * 150 + 150);
+                    this.points.push(new Vector2(drawingPos.x * 150 + 150, -drawingPos.y * 150 + 150));
                 } else {
                     this.painting = false;
                     this.ctx!.beginPath();
@@ -277,8 +425,9 @@ class Game
     {
           if(component?.pressed)
           {
-                Logger.Log("right trigger pressed");
-				this.laserPointer!.color = Color3.Blue();
+                // Logger.Log("right trigger pressed");
+                this.laserPointer!.color = Color3.Blue();
+                this.laserPointer!.parent = this.rightController!.pointer;
 
             var ray = new Ray(this.rightController!.pointer.position, this.rightController!.pointer.forward, 10);
             var pickInfo = this.scene.pickWithRay(ray);
@@ -308,15 +457,19 @@ class Game
                     console.log("draw" + drawingPos);
 
                     this.draw(drawingPos.x * 150 + 150, -drawingPos.y * 150 + 150);
+                    this.points.push(new Vector2(drawingPos.x * 150 + 150, -drawingPos.y * 150 + 150));
                  } else {
                     this.painting = false;
                     this.ctx!.beginPath();
                 }
               }
+              else if (pickInfo!.pickedMesh && pickInfo!.pickedMesh!.name == "testButton_rootMesh") {
+                  this.predictResult();
+              }
             }
        else
        {
-		  Logger.Log("right trigger released");
+		//   Logger.Log("right trigger released");
 		  this.painting = false;
           this.ctx!.beginPath();
        }
