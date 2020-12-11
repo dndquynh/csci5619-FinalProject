@@ -122,7 +122,7 @@ class Game
 
         // Disable teleportation and the laser pointer
         xrHelper.teleportation.dispose();
-        xrHelper.pointerSelection.dispose();
+        // xrHelper.pointerSelection.dispose();
 
         // Assign the xrCamera to a member variable
         this.xrCamera = xrHelper.baseExperience.camera;
