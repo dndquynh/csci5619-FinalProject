@@ -14,13 +14,13 @@ import { MeshBuilder } from  "@babylonjs/core/Meshes/meshBuilder";
 import { StandardMaterial} from "@babylonjs/core/Materials/standardMaterial";
 import { Logger } from "@babylonjs/core/Misc/logger";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
-import { SceneLoader } from "@babylonjs/core/Loading/sceneLoader";
 import {DynamicTexture, LinesMesh, Mesh, Ray} from "@babylonjs/core";
 import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
 import { GUI3DManager } from "@babylonjs/gui/3D/gui3DManager"
 import { Button3D } from "@babylonjs/gui/3D/controls/button3D"
-import { HolographicButton } from "@babylonjs/gui/3D/controls/holographicButton"
 import { TextBlock } from "@babylonjs/gui/2D/controls/textBlock"
+import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture"
+
 
 // Side effects
 import "@babylonjs/core/Helpers/sceneHelpers";
@@ -47,17 +47,22 @@ class Game
     private leftController: WebXRInputSource | null;
     private rightController: WebXRInputSource | null;
 
-	private drawingCanvas: Mesh | null;
+    private drawingCanvas: Mesh | null;
     private worldNode: TransformNode | null;
     private dynamicTexture: DynamicTexture | null;
     private ctx: CanvasRenderingContext2D | null;
+    private resultDynamicTexture: DynamicTexture | null;
+    private resultCtx: CanvasRenderingContext2D | null;
     private painting: Boolean;
 
     private laserPointer: LinesMesh | null;
 
     private model: LayersModel | null;
     private points: Array<Vector2>;
-    private objectNames: Array<String>;
+    private objectNames: Array<string>;
+    private posX: number;
+    private posY: number;
+    private textBlock: TextBlock | null;
 
     constructor()
     {
@@ -79,13 +84,18 @@ class Game
         this.laserPointer = null;
         this.dynamicTexture = null;
         this.ctx = null;
+        this.resultCtx = null;
+        this.resultDynamicTexture = null;
 
         this.painting = false;
+        this.posX = 0;
+        this.posY = 0;
 
         // ML
         this.model = null;
         this.points = [];
-        this.objectNames = ['table',  'star', 'flower', 'circle', 'cat']
+        this.objectNames = ['flower', 'ice_cream', 'table', 'circle', 'star']
+        this.textBlock = null;
     }
 
     start() : void
@@ -158,7 +168,28 @@ class Game
         canvasMaterial.emissiveColor = Color3.White();
 
         this.ctx = this.dynamicTexture.getContext();
+        this.ctx.fillStyle = "white";
+        this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+        this.dynamicTexture.update();
         plane.enableEdgesRendering();
+
+        // Result canvas
+        var resultPlane = MeshBuilder.CreatePlane("resultplane", {size:2}, this.scene);
+        resultPlane.position = new Vector3(-2, 0.6, 5);
+        resultPlane.isPickable = true;
+
+        // Dynamic texture for drawing canvas
+        this.resultDynamicTexture = new DynamicTexture("result dynamic texture", {width: 300, height: 300}, this.scene, false);
+        var resultCanvasMaterial = new StandardMaterial("result canvas material", this.scene);
+        resultCanvasMaterial.diffuseTexture = this.resultDynamicTexture;
+        resultPlane.material = resultCanvasMaterial;
+        resultCanvasMaterial.emissiveColor = Color3.White();
+
+        this.resultCtx = this.resultDynamicTexture.getContext();
+        this.resultCtx.fillStyle = "white";
+        this.resultCtx.fillRect(0, 0, this.resultCtx.canvas.width, this.resultCtx.canvas.height);
+        this.resultDynamicTexture.update();
+        resultPlane.enableEdgesRendering();
 
         // Assigns the controllers
         xrHelper.input.onControllerAddedObservable.add((inputSource) =>
@@ -248,6 +279,67 @@ class Game
         testButton.onPointerDownObservable.add(() => {
             this.predictResult();
         });
+
+        // Create a test button
+        var clearCanvasButton = new Button3D("clearButton");
+        guiManager.addControl(clearCanvasButton);
+
+        // This must be done after addControl to overwrite the default content
+        clearCanvasButton.position = new Vector3(0, 1.6, 3);
+        clearCanvasButton.scaling.y = .5;
+
+        // Link a transform node so we can move the button around
+        var clearCanvasButtonTransform = new TransformNode("clearCanvasButtonTransform", this.scene);
+        clearCanvasButtonTransform.rotation.y = 45 * Math.PI / 180;
+        clearCanvasButton.linkToTransformNode(clearCanvasButtonTransform);
+
+        // Create the test button text
+        var clearButtonText = new TextBlock();
+        clearButtonText.text = "Clear";
+        clearButtonText.color = "white";
+        clearButtonText.fontSize = 24;
+        clearButtonText.scaleY = 2;
+        clearCanvasButton.content = clearButtonText;
+
+
+        // Type cast the button material so we can change the color
+        var clearButtonMaterial = <StandardMaterial>clearCanvasButton.mesh!.material;
+
+        // Custom background color
+        backgroundColor = new Color3(.284, .73, .831);
+        clearButtonMaterial.diffuseColor = backgroundColor;
+        clearCanvasButton.pointerOutAnimation = () => {
+            clearButtonMaterial.diffuseColor = backgroundColor;
+        }
+
+        // Custom hover color
+        clearCanvasButton.pointerEnterAnimation = () => {
+            clearButtonMaterial.diffuseColor = hoverColor;
+        }
+
+        clearCanvasButton.onPointerDownObservable.add(() => {
+            this.clearCanvas();
+        });
+
+        // Manually create a plane for adding static text
+        var staticTextPlane = MeshBuilder.CreatePlane("textPlane", {}, this.scene);
+        staticTextPlane.position.y = 1.6;
+        staticTextPlane.position.z = 1;
+        staticTextPlane.position.x = 1;
+
+        staticTextPlane.isPickable = false;
+
+        // Create a dynamic texture for adding GUI controls
+        var staticTextTexture = AdvancedDynamicTexture.CreateForMesh(staticTextPlane, 512, 512);
+
+        // Create a static text block
+        var staticText = new TextBlock();
+        staticText.text = "Hello world!";
+        staticText.color = "white";
+        staticText.fontSize = 20;
+        staticTextTexture.addControl(staticText);
+        this.textBlock = staticText;
+
         // Make sure the environment and skybox is not pickable!
         environment!.ground!.isPickable = false;
         environment!.skybox!.isPickable = false;
@@ -265,17 +357,18 @@ class Game
         this.model = await tf.loadLayersModel('ML/model/model.json');
     }
 
-    private draw(posX: number, posY: number) {
-        console.log(posX, posY);
+    private draw(nextposX: number, nextposY: number) {
         if (!this.painting) return;
         Logger.Log("drawing");
-        this.ctx!.strokeStyle = "red";
+        this.ctx!.beginPath();
+        this.ctx!.strokeStyle = "black";
         this.ctx!.lineWidth = 10;
         this.ctx!.lineCap = "round";
-        this.ctx!.lineTo(posX, posY);
+        this.ctx!.moveTo(this.posX, this.posY);
+        this.posX = nextposX;
+        this.posY = nextposY;
+        this.ctx!.lineTo(this.posX, this.posY);
         this.ctx!.stroke();
-        this.ctx!.beginPath();
-        this.ctx!.moveTo(posX, posY);
         this.dynamicTexture!.update();
     }
 
@@ -314,6 +407,11 @@ class Game
         const dpi = window.devicePixelRatio
         const imgData = this.ctx!.getImageData(minBoundingBox.min.x * dpi, minBoundingBox.min.y * dpi,
                                                       (minBoundingBox.max.x - minBoundingBox.min.x) * dpi, (minBoundingBox.max.y - minBoundingBox.min.y) * dpi);
+        this.resultCtx!.clearRect(0,0, this.resultCtx!.canvas.width, this.resultCtx!.canvas.height);
+        this.resultCtx!.fillStyle = "white";
+        this.resultCtx!.fillRect(0, 0, this.resultCtx!.canvas.width, this.resultCtx!.canvas.height);
+        this.resultCtx!.putImageData(imgData, 0, 0);
+        this.resultDynamicTexture!.update();
         return imgData
     }
 
@@ -344,7 +442,7 @@ class Game
 
             //get the prediction
             const pred = (<tf.Tensor>this.model!.predict(this.preprocess(imgData))).dataSync()
-
+            console.log(pred);
             var maxIndex = 0;
             for (var i = 0; i < pred.length; i++) {
                 if (pred[i] > pred[maxIndex]) {
@@ -352,11 +450,21 @@ class Game
                 }
             }
             console.log(this.objectNames[maxIndex]);
+            this.textBlock!.text = this.objectNames[maxIndex];
             return this.objectNames[maxIndex];
         } else {
             console.log("Not enough data");
             return;
         }
+    }
+
+    private clearCanvas() {
+        console.log("clearing")
+        this.ctx!.clearRect(0, 0, this.ctx!.canvas.width, this.ctx!.canvas.height);
+        this.ctx!.fillStyle = "white";
+        this.ctx!.fillRect(0, 0, this.ctx!.canvas.width, this.ctx!.canvas.height);
+        this.dynamicTexture!.update();
+        this.points = [];
     }
 
 
@@ -381,15 +489,12 @@ class Game
 
             var ray = new Ray(this.leftController!.pointer.position, this.leftController!.pointer.forward, 10);
             var pickInfo = this.scene.pickWithRay(ray);
-            console.log(pickInfo);
+            // console.log(pickInfo);
 
             if (pickInfo?.hit) {
                 Logger.Log(pickInfo!.pickedMesh!.name);
                 if (pickInfo!.pickedMesh && pickInfo!.pickedMesh!.name == "plane") {
                     Logger.Log("ray hit canvas");
-                    if (!this.painting) {
-                        this.painting = true;
-                    }
 
                     var canvasPos = this.drawingCanvas!.getAbsolutePosition();
                     var pickPos = pickInfo!.pickedPoint;
@@ -402,19 +507,24 @@ class Game
                     canvasPos = Vector3.TransformCoordinates(canvasPos, m);
                     pickPos = Vector3.TransformCoordinates(pickPos!, m);
                     drawingPos = pickPos!.subtract(canvasPos);
-                    console.log('canvas' + canvasPos);
-                    console.log('picked' + pickPos);
-                    console.log("draw" + drawingPos);
+                    // console.log('canvas' + canvasPos);
+                    // console.log('picked' + pickPos);
+                    // console.log("draw" + drawingPos);
 
-                    this.draw(drawingPos.x * 150 + 150, -drawingPos.y * 150 + 150);
+                    if (!this.painting) {
+                        console.log("trigger down");
+                        this.painting = true;
+                        this.posX = drawingPos.x * 150 + 150;
+                        this.posY = -drawingPos.y * 150 + 150
+                    } else {
+                        console.log("trigger move");
+                        this.draw(drawingPos.x * 150 + 150, -drawingPos.y * 150 + 150);
+                    }
                     this.points.push(new Vector2(drawingPos.x * 150 + 150, -drawingPos.y * 150 + 150));
-                } else {
-                    this.painting = false;
-                    this.ctx!.beginPath();
                 }
             }
         }
-        else
+        else if (component?.changes.pressed && !component?.pressed)
         {
             this.painting = false;
             this.ctx!.beginPath();
@@ -423,28 +533,23 @@ class Game
 
     private onRightTrigger(component?: WebXRControllerComponent)
     {
-          if(component?.pressed)
-          {
-                // Logger.Log("right trigger pressed");
-                this.laserPointer!.color = Color3.Blue();
-                this.laserPointer!.parent = this.rightController!.pointer;
+        if (component?.pressed)
+        {
+            this.laserPointer!.color = Color3.Blue();
+            this.laserPointer!.parent = this.rightController!.pointer;
 
             var ray = new Ray(this.rightController!.pointer.position, this.rightController!.pointer.forward, 10);
             var pickInfo = this.scene.pickWithRay(ray);
-            console.log(pickInfo);
 
             if (pickInfo?.hit) {
                 Logger.Log(pickInfo!.pickedMesh!.name);
                 if (pickInfo!.pickedMesh && pickInfo!.pickedMesh!.name == "plane") {
                     Logger.Log("ray hit canvas");
-                    if (!this.painting) {
-                        this.painting = true;
-                    }
 
                     var canvasPos = this.drawingCanvas!.getAbsolutePosition();
                     var pickPos = pickInfo!.pickedPoint;
                     var drawingPos = pickPos!.subtract(canvasPos);
-                    console.log("draw" + drawingPos);
+                    // console.log("draw" + drawingPos);
 
                     // Convert to the drawing canvas local space
                     var m = new Matrix();
@@ -452,24 +557,24 @@ class Game
                     canvasPos = Vector3.TransformCoordinates(canvasPos, m);
                     pickPos = Vector3.TransformCoordinates(pickPos!, m);
                     drawingPos = pickPos!.subtract(canvasPos);
-                    console.log('canvas' + canvasPos);
-                    console.log('picked' + pickPos);
-                    console.log("draw" + drawingPos);
+                    // console.log('canvas' + canvasPos);
+                    // console.log('picked' + pickPos);
+                    // console.log("draw" + drawingPos);
 
-                    this.draw(drawingPos.x * 150 + 150, -drawingPos.y * 150 + 150);
+                    if (!this.painting) {
+                        console.log("trigger down");
+                        this.painting = true;
+                        this.posX = drawingPos.x * 150 + 150;
+                        this.posY = -drawingPos.y * 150 + 150
+                    } else {
+                        console.log("trigger move");
+                        this.draw(drawingPos.x * 150 + 150, -drawingPos.y * 150 + 150);
+                    }
                     this.points.push(new Vector2(drawingPos.x * 150 + 150, -drawingPos.y * 150 + 150));
-                 } else {
-                    this.painting = false;
-                    this.ctx!.beginPath();
                 }
-              }
-              else if (pickInfo!.pickedMesh && pickInfo!.pickedMesh!.name == "testButton_rootMesh") {
-                  this.predictResult();
-              }
             }
-       else
-       {
-		//   Logger.Log("right trigger released");
+        }
+        else if (component?.changes.pressed && !component?.pressed) {
 		  this.painting = false;
           this.ctx!.beginPath();
        }
