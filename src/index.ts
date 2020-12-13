@@ -16,6 +16,7 @@ import { Logger } from "@babylonjs/core/Misc/logger";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 import {DynamicTexture, LinesMesh, Mesh, Ray} from "@babylonjs/core";
 import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
+import { Quaternion } from "@babylonjs/core/Maths/math.vector";
 import { GUI3DManager } from "@babylonjs/gui/3D/gui3DManager"
 import { Button3D } from "@babylonjs/gui/3D/controls/button3D"
 import { TextBlock } from "@babylonjs/gui/2D/controls/textBlock"
@@ -225,6 +226,54 @@ class Game
         });
 
 		 var assetsManager = new AssetsManager(this.scene);
+        // Create a task for each asset you want to load
+        var worldTask = assetsManager.addMeshTask("world task", "", "assets/models/", "cat.glb");
+        worldTask.onSuccess = (task) => {
+            worldTask.loadedMeshes[0].name = "cat";
+            worldTask.loadedMeshes[0].position = new Vector3(0, -2, 0);
+			var meshRotation = Quaternion.FromEulerAngles(0, Math.PI, 0);
+			if( worldTask.loadedMeshes[0].rotationQuaternion){
+            worldTask.loadedMeshes[0].rotationQuaternion.multiplyInPlace(meshRotation);
+			}
+            worldTask.loadedMeshes[0].scaling = new Vector3(0.1,0.1,0.1);
+        }
+		
+		 var worldTask2 = assetsManager.addMeshTask("world task", "", "assets/models/", "flower.glb");
+        worldTask2.onSuccess = (task) => {
+            worldTask2.loadedMeshes[0].name = "flower";
+            worldTask2.loadedMeshes[0].position = new Vector3(0, -2, 0);
+            worldTask2.loadedMeshes[0].rotation = Vector3.Zero();
+            worldTask2.loadedMeshes[0].scaling = new Vector3(0.1,0.1,0.1);
+        }
+		
+		 var worldTask3 = assetsManager.addMeshTask("world task", "", "assets/models/", "star.glb");
+        worldTask3.onSuccess = (task) => {
+            worldTask3.loadedMeshes[0].name = "star";
+            worldTask3.loadedMeshes[0].position = new Vector3(0, -2, 0);
+			var meshRotation = Quaternion.FromEulerAngles(0, Math.PI / 2, 0);
+           if( worldTask3.loadedMeshes[0].rotationQuaternion){
+            worldTask3.loadedMeshes[0].rotationQuaternion.multiplyInPlace(meshRotation);
+			}
+            worldTask3.loadedMeshes[0].scaling = new Vector3(0.001,0.001,0.001);
+        }
+		
+		 var worldTask4 = assetsManager.addMeshTask("world task", "", "assets/models/", "table.glb");
+        worldTask4.onSuccess = (task) => {
+            worldTask4.loadedMeshes[0].name = "table";
+            worldTask4.loadedMeshes[0].position = new Vector3(0, -2, 0);
+            var meshRotation = Quaternion.FromEulerAngles(0, Math.PI / 2, 0);
+            if( worldTask4.loadedMeshes[0].rotationQuaternion){
+            worldTask4.loadedMeshes[0].rotationQuaternion.multiplyInPlace(meshRotation);
+			}
+            worldTask4.loadedMeshes[0].scaling = new Vector3(0.1,0.1,0.1);
+        }
+		 
+		var sphereMaterial = new StandardMaterial("sphereMaterial", this.scene);
+	    sphereMaterial.diffuseColor = new Color3(0, 1, 0);
+	    var sphere = MeshBuilder.CreateSphere("sphere", {diameter: 1, segments: 32}, this.scene);
+	    sphere.material = sphereMaterial;
+	    sphere.position = new Vector3(0, -2, 0);
+		 
         // Creates a default skybox
         const environment = this.scene.createDefaultEnvironment({
             createGround: true,
