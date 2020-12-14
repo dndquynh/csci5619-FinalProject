@@ -17,6 +17,7 @@ Third Party Assets: Cat Model: https://sketchfab.com/3d-models/sleeping-cat-3f76
 					Star Model: https://sketchfab.com/3d-models/star-630cd2c1dbcf486da2777244300fed5b
 					Table Model: https://sketchfab.com/3d-models/low-poly-table-d33bd88ed7f146669129d253593e7aee
 					Flower Model: https://sketchfab.com/3d-models/margarita-flower-58ce34c65642408cb92eab784af2bd6c
+                                        Ice Cream Model: https://sketchfab.com/3d-models/ice-cream-6a1419b7a698497b90916e9f21dd5264
 
 Make sure to document all third party assets. ***Be aware that points will be deducted for using third party assets that are not properly documented.***
 
