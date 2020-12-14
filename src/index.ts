@@ -1,4 +1,4 @@
-/* CSCI 5619 Assignment 5, Fall 2020
+/* CSCI 5619 Final, Fall 2020
  * Author: Evan Suma Rosenberg
  * License: Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
  */
@@ -68,6 +68,12 @@ class Game
     private textBlock: TextBlock | null;
     private predictableMeshes: Array<AbstractMesh>;
 	private count: number;
+	private rightGrabbedObject: AbstractMesh | null;
+	private leftGrabbedObject: AbstractMesh | null;
+    private grabbableObjects: Array<AbstractMesh>;
+	private prevCameraPos: Vector3;
+	
+	
 	
     constructor()
     {
@@ -103,6 +109,10 @@ class Game
         this.textBlock = null;
 		this.predictableMeshes = [];
 		this.count = 0;
+		this.rightGrabbedObject = null;
+		this.leftGrabbedObject = null;
+        this.grabbableObjects = [];
+		this.prevCameraPos = new Vector3(0,0,0);
     }
 
     start() : void
@@ -158,13 +168,14 @@ class Game
 
 		this.worldNode = new TransformNode("world node");
         this.worldNode.position =  this.xrCamera.position;
+		this.worldNode.position.y = this.worldNode.position.y - 1;
 		this.worldNode.setParent(this.xrCamera);
 
 		var plane = MeshBuilder.CreatePlane("plane", {size:2}, this.scene);
         plane.position = new Vector3(0, 1.6, 5);
         plane.isPickable = true;
 		this.drawingCanvas = plane;
-        //this.drawingCanvas.setParent(this.worldNode);
+        this.drawingCanvas.setParent(this.xrCamera);
         this.drawingCanvas.position.y = -1;
 
         // Dynamic texture for drawing canvas
@@ -243,6 +254,7 @@ class Game
 			}
             worldTask.loadedMeshes[0].scaling = new Vector3(0.1,0.1,0.1);
 			this.predictableMeshes.push( worldTask.loadedMeshes[0]);
+			this.grabbableObjects.push( worldTask.loadedMeshes[0]);
         }
 		
 		 var worldTask2 = assetsManager.addMeshTask("world task", "", "assets/models/", "flower.glb");
@@ -252,6 +264,7 @@ class Game
             worldTask2.loadedMeshes[0].rotation = Vector3.Zero();
             worldTask2.loadedMeshes[0].scaling = new Vector3(0.1,0.1,0.1);
 			this.predictableMeshes.push( worldTask2.loadedMeshes[0]);
+			this.grabbableObjects.push( worldTask2.loadedMeshes[0]);
         }
 		
 		 var worldTask3 = assetsManager.addMeshTask("world task", "", "assets/models/", "star.glb");
@@ -264,6 +277,7 @@ class Game
 			}
             worldTask3.loadedMeshes[0].scaling = new Vector3(0.001,0.001,0.001);
 			this.predictableMeshes.push( worldTask3.loadedMeshes[0]);
+			this.grabbableObjects.push( worldTask3.loadedMeshes[0]);
         }
 		
 		 var worldTask4 = assetsManager.addMeshTask("world task", "", "assets/models/", "table.glb");
@@ -276,6 +290,7 @@ class Game
 			}
             worldTask4.loadedMeshes[0].scaling = new Vector3(0.1,0.1,0.1);
 			this.predictableMeshes.push( worldTask4.loadedMeshes[0]);
+			this.grabbableObjects.push( worldTask4.loadedMeshes[0]);
         }
 		 
 		var sphereMaterial = new StandardMaterial("sphereMaterial", this.scene);
@@ -284,6 +299,7 @@ class Game
 	    sphere.material = sphereMaterial;
 	    sphere.position = new Vector3(0, -2, 0);
 		this.predictableMeshes.push(sphere);
+		this.grabbableObjects.push(sphere);
 		 
         // Creates a default skybox
         const environment = this.scene.createDefaultEnvironment({
@@ -344,10 +360,12 @@ class Game
                     {
 					  var meshCopy = new InstancedMesh(this.predictableMeshes[i].name + "instance" + this.count, <Mesh>this.predictableMeshes[i]);
 					  if (this.xrCamera){
-					  meshCopy.position = new Vector3(this.xrCamera.position.x,0.6,this.xrCamera.position.z + 3);
+					  this.predictableMeshes[i].position = new Vector3(this.xrCamera.position.x,0.6,this.xrCamera.position.z + 1);
+					  //meshCopy = new Vector3(this.xrCamera.position.x,0.6,this.xrCamera.position.z + 4);
 					  }
 					  this.count = this.count + 1;
-					  
+					  this.grabbableObjects.push(this.predictableMeshes[i]);
+					  this.predictableMeshes[i].setParent(null);
                     }
               }
         });
@@ -545,7 +563,17 @@ class Game
 	{
 	if((this.xrCamera)&&(this.drawingCanvas)){
 		if(this.painting == false){
-	this.drawingCanvas.position = new Vector3((this.xrCamera.position.x), 0.6, this.xrCamera.position.z+5.0);
+			if(this.drawingCanvas.parent == null){
+			  this.drawingCanvas.position = new Vector3(this.xrCamera.position.x, 0.6, this.xrCamera.position.z+5.0);
+			  this.drawingCanvas.setParent(this.xrCamera);
+			}
+			//this.drawingCanvas.position.y = 0.6;
+		}
+		else
+		{
+		  if(this.drawingCanvas.parent != null){
+			  this.drawingCanvas.setParent(null);
+		  }
 		}
     }
       this.processControllerInput();
@@ -554,7 +582,9 @@ class Game
     private processControllerInput()
     {
         this.onLeftTrigger(this.leftController?.motionController?.getComponent("xr-standard-trigger"));
+		this.onLeftSqueeze(this.leftController?.motionController?.getComponent("xr-standard-squeeze"));
         this.onRightTrigger(this.rightController?.motionController?.getComponent("xr-standard-trigger"));
+		this.onRightSqueeze(this.rightController?.motionController?.getComponent("xr-standard-squeeze"));
     }
 
     private onLeftTrigger(component?: WebXRControllerComponent)
@@ -607,7 +637,37 @@ class Game
             this.ctx!.beginPath();
         }
     }
+    
+	 private onLeftSqueeze(component?: WebXRControllerComponent)
+    {  
+        if(component?.changes.pressed)
+        {
+            if(component?.pressed)
+            {
+                Logger.Log("left squeeze pressed");
 
+                for(var i = 0; i < this.grabbableObjects.length && !this.leftGrabbedObject; i++)
+                {
+                    if(this.leftController!.grip!.intersectsMesh(this.grabbableObjects[i], true))
+                    {
+                        this.leftGrabbedObject = this.grabbableObjects[i];
+                        this.leftGrabbedObject.setParent(this.leftController!.grip!);
+                    }
+                }
+            }
+            else
+            {
+                Logger.Log("left squeeze released");
+
+                if(this.leftGrabbedObject)
+                {
+                    this.leftGrabbedObject.setParent(null);
+                    this.leftGrabbedObject = null;
+                }
+            }
+        }  
+    }
+	
     private onRightTrigger(component?: WebXRControllerComponent)
     {
         if (component?.pressed)
@@ -655,6 +715,36 @@ class Game
 		  this.painting = false;
           this.ctx!.beginPath();
        }
+    }
+	
+	 private onRightSqueeze(component?: WebXRControllerComponent)
+    {  
+        if(component?.changes.pressed)
+        {
+            if(component?.pressed)
+            {
+                Logger.Log("right squeeze pressed");
+
+                for(var i = 0; i < this.grabbableObjects.length && !this.rightGrabbedObject; i++)
+                {
+                    if(this.rightController!.grip!.intersectsMesh(this.grabbableObjects[i], true))
+                    {
+                        this.rightGrabbedObject = this.grabbableObjects[i];
+                        this.rightGrabbedObject.setParent(this.rightController!.grip!);
+                    }
+                }
+            }
+            else
+            {
+                Logger.Log("right squeeze released");
+
+                if(this.rightGrabbedObject)
+                {
+                    this.rightGrabbedObject.setParent(null);
+                    this.rightGrabbedObject = null;
+                }
+            }
+        }  
     }
 }
 /******* End of the Game class ******/
