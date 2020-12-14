@@ -244,7 +244,7 @@ class Game
 
 		 var assetsManager = new AssetsManager(this.scene);
         // Create a task for each asset you want to load
-        var worldTask = assetsManager.addMeshTask("world task", "", "assets/models/", "cat.glb");
+        var worldTask = assetsManager.addMeshTask("world task", "", "assets/models/", "ice_cream.glb");
         worldTask.onSuccess = (task) => {
             worldTask.loadedMeshes[0].name = "ice_cream";
             worldTask.loadedMeshes[0].position = new Vector3(0, -2, 0);
