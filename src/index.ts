@@ -21,6 +21,8 @@ import { GUI3DManager } from "@babylonjs/gui/3D/gui3DManager"
 import { Button3D } from "@babylonjs/gui/3D/controls/button3D"
 import { TextBlock } from "@babylonjs/gui/2D/controls/textBlock"
 import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture"
+import { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
+import { InstancedMesh } from "@babylonjs/core/Meshes/instancedMesh";
 
 
 // Side effects
@@ -64,7 +66,9 @@ class Game
     private posX: number;
     private posY: number;
     private textBlock: TextBlock | null;
-
+    private predictableMeshes: Array<AbstractMesh>;
+	private count: number;
+	
     constructor()
     {
         // Get the canvas element
@@ -97,6 +101,8 @@ class Game
         this.points = [];
         this.objectNames = ['flower', 'ice_cream', 'table', 'circle', 'star']
         this.textBlock = null;
+		this.predictableMeshes = [];
+		this.count = 0;
     }
 
     start() : void
@@ -158,7 +164,7 @@ class Game
         plane.position = new Vector3(0, 1.6, 5);
         plane.isPickable = true;
 		this.drawingCanvas = plane;
-        this.drawingCanvas.setParent(this.worldNode);
+        //this.drawingCanvas.setParent(this.worldNode);
         this.drawingCanvas.position.y = -1;
 
         // Dynamic texture for drawing canvas
@@ -229,13 +235,14 @@ class Game
         // Create a task for each asset you want to load
         var worldTask = assetsManager.addMeshTask("world task", "", "assets/models/", "cat.glb");
         worldTask.onSuccess = (task) => {
-            worldTask.loadedMeshes[0].name = "cat";
+            worldTask.loadedMeshes[0].name = "ice_cream";
             worldTask.loadedMeshes[0].position = new Vector3(0, -2, 0);
 			var meshRotation = Quaternion.FromEulerAngles(0, Math.PI, 0);
 			if( worldTask.loadedMeshes[0].rotationQuaternion){
             worldTask.loadedMeshes[0].rotationQuaternion.multiplyInPlace(meshRotation);
 			}
             worldTask.loadedMeshes[0].scaling = new Vector3(0.1,0.1,0.1);
+			this.predictableMeshes.push( worldTask.loadedMeshes[0]);
         }
 		
 		 var worldTask2 = assetsManager.addMeshTask("world task", "", "assets/models/", "flower.glb");
@@ -244,6 +251,7 @@ class Game
             worldTask2.loadedMeshes[0].position = new Vector3(0, -2, 0);
             worldTask2.loadedMeshes[0].rotation = Vector3.Zero();
             worldTask2.loadedMeshes[0].scaling = new Vector3(0.1,0.1,0.1);
+			this.predictableMeshes.push( worldTask2.loadedMeshes[0]);
         }
 		
 		 var worldTask3 = assetsManager.addMeshTask("world task", "", "assets/models/", "star.glb");
@@ -255,6 +263,7 @@ class Game
             worldTask3.loadedMeshes[0].rotationQuaternion.multiplyInPlace(meshRotation);
 			}
             worldTask3.loadedMeshes[0].scaling = new Vector3(0.001,0.001,0.001);
+			this.predictableMeshes.push( worldTask3.loadedMeshes[0]);
         }
 		
 		 var worldTask4 = assetsManager.addMeshTask("world task", "", "assets/models/", "table.glb");
@@ -266,6 +275,7 @@ class Game
             worldTask4.loadedMeshes[0].rotationQuaternion.multiplyInPlace(meshRotation);
 			}
             worldTask4.loadedMeshes[0].scaling = new Vector3(0.1,0.1,0.1);
+			this.predictableMeshes.push( worldTask4.loadedMeshes[0]);
         }
 		 
 		var sphereMaterial = new StandardMaterial("sphereMaterial", this.scene);
@@ -273,6 +283,7 @@ class Game
 	    var sphere = MeshBuilder.CreateSphere("sphere", {diameter: 1, segments: 32}, this.scene);
 	    sphere.material = sphereMaterial;
 	    sphere.position = new Vector3(0, -2, 0);
+		this.predictableMeshes.push(sphere);
 		 
         // Creates a default skybox
         const environment = this.scene.createDefaultEnvironment({
@@ -326,7 +337,19 @@ class Game
 
         //  Make prediction
         testButton.onPointerDownObservable.add(() => {
-            this.predictResult();
+            var prediction = this.predictResult();
+             for(var i = 0; i < this.predictableMeshes.length; i++)
+              {
+                    if(this.predictableMeshes[i].name == prediction)
+                    {
+					  var meshCopy = new InstancedMesh(this.predictableMeshes[i].name + "instance" + this.count, <Mesh>this.predictableMeshes[i]);
+					  if (this.xrCamera){
+					  meshCopy.position = new Vector3(this.xrCamera.position.x,0.6,this.xrCamera.position.z + 3);
+					  }
+					  this.count = this.count + 1;
+					  
+                    }
+              }
         });
 
         // Create a test button
@@ -503,7 +526,7 @@ class Game
             return this.objectNames[maxIndex];
         } else {
             console.log("Not enough data");
-            return;
+            return "";
         }
     }
 
@@ -519,7 +542,12 @@ class Game
 
     // The main update loop will be executed once per frame before the scene is rendered
     private update() : void
-    {
+	{
+	if((this.xrCamera)&&(this.drawingCanvas)){
+		if(this.painting == false){
+	this.drawingCanvas.position = new Vector3((this.xrCamera.position.x), 0.6, this.xrCamera.position.z+5.0);
+		}
+    }
       this.processControllerInput();
     }
 
