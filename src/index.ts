@@ -72,16 +72,16 @@ class Game
 	private leftGrabbedObject: AbstractMesh | null;
     private grabbableObjects: Array<AbstractMesh>;
 	private prevCameraPos: Vector3;
-	
+
 	private selectedObjectL: AbstractMesh | null;
     private selectionTransformL: TransformNode | null;
-	
+
 	private selectedObjectR: AbstractMesh | null;
     private selectionTransformR: TransformNode | null;
 
-	
-	
-	
+
+
+
     constructor()
     {
         // Get the canvas element
@@ -120,10 +120,10 @@ class Game
 		this.leftGrabbedObject = null;
         this.grabbableObjects = [];
 		this.prevCameraPos = new Vector3(0,0,0);
-		
+
 		this.selectedObjectL = null;
         this.selectionTransformL = null;
-		
+
 		this.selectedObjectR = null;
         this.selectionTransformR = null;
     }
@@ -189,7 +189,7 @@ class Game
         plane.isPickable = true;
 		this.drawingCanvas = plane;
         this.drawingCanvas.setParent(this.xrCamera);
-        this.drawingCanvas.position.y = -1;
+        this.drawingCanvas.position.y = -0.6;
 
         // Dynamic texture for drawing canvas
         this.dynamicTexture = new DynamicTexture("dynamic texture", {width: 300, height: 300}, this.scene, false);
@@ -238,13 +238,13 @@ class Game
                 this.laserPointer!.visibility = 1;
             }
         });
-		
+
         this.selectionTransformL = new TransformNode("selectionTransformL", this.scene);
         this.selectionTransformL.parent = this.laserPointer;
-		
+
 		this.selectionTransformR = new TransformNode("selectionTransformR", this.scene);
         this.selectionTransformR.parent = this.laserPointer;
-		
+
         // Don't forget to deparent the laser pointer or it will be destroyed!
         xrHelper.input.onControllerRemovedObservable.add((inputSource) => {
 
@@ -275,7 +275,7 @@ class Game
 			this.predictableMeshes.push( worldTask.loadedMeshes[0]);
 			this.grabbableObjects.push( worldTask.loadedMeshes[0]);
         }
-		
+
 		 var worldTask2 = assetsManager.addMeshTask("world task", "", "assets/models/", "flower.glb");
         worldTask2.onSuccess = (task) => {
             worldTask2.loadedMeshes[0].name = "flower";
@@ -285,7 +285,7 @@ class Game
 			this.predictableMeshes.push( worldTask2.loadedMeshes[0]);
 			this.grabbableObjects.push( worldTask2.loadedMeshes[0]);
         }
-		
+
 		 var worldTask3 = assetsManager.addMeshTask("world task", "", "assets/models/", "star.glb");
         worldTask3.onSuccess = (task) => {
             worldTask3.loadedMeshes[0].name = "star";
@@ -298,7 +298,7 @@ class Game
 			this.predictableMeshes.push( worldTask3.loadedMeshes[0]);
 			this.grabbableObjects.push( worldTask3.loadedMeshes[0]);
         }
-		
+
 		 var worldTask4 = assetsManager.addMeshTask("world task", "", "assets/models/", "table.glb");
         worldTask4.onSuccess = (task) => {
             worldTask4.loadedMeshes[0].name = "table";
@@ -311,7 +311,7 @@ class Game
 			this.predictableMeshes.push( worldTask4.loadedMeshes[0]);
 			this.grabbableObjects.push( worldTask4.loadedMeshes[0]);
         }
-		 
+
 		var sphereMaterial = new StandardMaterial("sphereMaterial", this.scene);
 	    sphereMaterial.diffuseColor = new Color3(0, 1, 0);
 	    var circle = MeshBuilder.CreateSphere("circle", {diameter: 1, segments: 32}, this.scene);
@@ -319,7 +319,7 @@ class Game
 	    circle.position = new Vector3(0, -2, 0);
 		this.predictableMeshes.push(circle);
 		this.grabbableObjects.push(circle);
-		 
+
         // Creates a default skybox
         const environment = this.scene.createDefaultEnvironment({
             createGround: true,
@@ -387,7 +387,7 @@ class Game
 					  if(meshCopy.name == "sphere"){
 						this.grabbableObjects.push(meshCopy);
 					  }
-					  
+
 		              for (var i = 0; i<meshChildren.length; i++){
 						  if((meshChildren[i].name == "circle") || (meshChildren[i].name == "star_02_StarBase_0") || (meshChildren[i].name == "node0") || (meshChildren[i].name == "margarita_flower") || (meshChildren[i].name == "root" )){
 							 this.grabbableObjects.push(meshChildren[i]);
@@ -592,8 +592,9 @@ class Game
 	if((this.xrCamera)&&(this.drawingCanvas)){
 		if(this.painting == false){
 			if(this.drawingCanvas.parent == null){
-			  this.drawingCanvas.position = new Vector3(this.xrCamera.position.x, 0.6, this.xrCamera.position.z+5.0);
-			  this.drawingCanvas.setParent(this.xrCamera);
+			//   this.drawingCanvas.position = new Vector3(this.xrCamera.position.x, 0.6, this.xrCamera.position.z+5.0);
+              this.drawingCanvas.setParent(this.xrCamera);
+              this.drawingCanvas.position.y = -0.6;
 			}
 			//this.drawingCanvas.position.y = 0.6;
 		}
@@ -667,9 +668,9 @@ class Game
             this.ctx!.beginPath();
         }
     }
-    
+
 	 private onLeftSqueeze(component?: WebXRControllerComponent)
-    {  
+    {
         if(component?.changes.pressed)
         {
             if(component?.pressed)
@@ -679,7 +680,7 @@ class Game
                 var ray = new Ray(this.leftController!.pointer.position, this.leftController!.pointer.forward, 10);
                 var pickInfo = this.scene.pickWithRay(ray);
 
-                // Deselect the currently selected object 
+                // Deselect the currently selected object
                 if(this.selectedObjectL)
                 {
                    // this.selectedObject.disableEdgesRendering();
@@ -707,9 +708,9 @@ class Game
                 if(this.selectedObjectL)
                 {
                     this.selectedObjectL!.setParent(null);
-                }  
+                }
             }
-        }  
+        }
     }
 	 private onLeftThumbstick(component?: WebXRControllerComponent)
     {
@@ -723,7 +724,7 @@ class Game
             this.selectedObjectL.translate(this.leftController!.pointer.forward, moveDistance, Space.WORLD);
         }
     }
-	
+
     private onRightTrigger(component?: WebXRControllerComponent)
     {
         if (component?.pressed)
@@ -772,9 +773,9 @@ class Game
           this.ctx!.beginPath();
        }
     }
-	
+
 	 private onRightSqueeze(component?: WebXRControllerComponent)
-    {  
+    {
         if(component?.changes.pressed)
         {
             if(component?.pressed)
@@ -784,7 +785,7 @@ class Game
                 var ray = new Ray(this.rightController!.pointer.position, this.rightController!.pointer.forward, 10);
                 var pickInfo = this.scene.pickWithRay(ray);
 
-                // Deselect the currently selected object 
+                // Deselect the currently selected object
                 if(this.selectedObjectR)
                 {
                    // this.selectedObject.disableEdgesRendering();
@@ -812,9 +813,9 @@ class Game
                 if(this.selectedObjectR)
                 {
                     this.selectedObjectR!.setParent(null);
-                }  
+                }
             }
-        }  
+        }
     }
 	 private onRightThumbstick(component?: WebXRControllerComponent)
     {
