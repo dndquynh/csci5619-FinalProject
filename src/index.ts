@@ -5,7 +5,7 @@
 
 import { Engine } from "@babylonjs/core/Engines/engine";
 import { Scene } from "@babylonjs/core/scene";
-import { Vector3, Color3, Matrix, Vector2 } from "@babylonjs/core/Maths/math";
+import { Vector3, Color3, Matrix, Vector2, Space } from "@babylonjs/core/Maths/math";
 import { UniversalCamera } from "@babylonjs/core/Cameras/universalCamera";
 import { WebXRInputSource } from "@babylonjs/core/XR/webXRInputSource";
 import { WebXRCamera } from "@babylonjs/core/XR/webXRCamera";
@@ -73,6 +73,13 @@ class Game
     private grabbableObjects: Array<AbstractMesh>;
 	private prevCameraPos: Vector3;
 	
+	private selectedObjectL: AbstractMesh | null;
+    private selectionTransformL: TransformNode | null;
+	
+	private selectedObjectR: AbstractMesh | null;
+    private selectionTransformR: TransformNode | null;
+
+	
 	
 	
     constructor()
@@ -113,6 +120,12 @@ class Game
 		this.leftGrabbedObject = null;
         this.grabbableObjects = [];
 		this.prevCameraPos = new Vector3(0,0,0);
+		
+		this.selectedObjectL = null;
+        this.selectionTransformL = null;
+		
+		this.selectedObjectR = null;
+        this.selectionTransformR = null;
     }
 
     start() : void
@@ -225,7 +238,13 @@ class Game
                 this.laserPointer!.visibility = 1;
             }
         });
-
+		
+        this.selectionTransformL = new TransformNode("selectionTransformL", this.scene);
+        this.selectionTransformL.parent = this.laserPointer;
+		
+		this.selectionTransformR = new TransformNode("selectionTransformR", this.scene);
+        this.selectionTransformR.parent = this.laserPointer;
+		
         // Don't forget to deparent the laser pointer or it will be destroyed!
         xrHelper.input.onControllerRemovedObservable.add((inputSource) => {
 
@@ -295,11 +314,11 @@ class Game
 		 
 		var sphereMaterial = new StandardMaterial("sphereMaterial", this.scene);
 	    sphereMaterial.diffuseColor = new Color3(0, 1, 0);
-	    var sphere = MeshBuilder.CreateSphere("sphere", {diameter: 1, segments: 32}, this.scene);
-	    sphere.material = sphereMaterial;
-	    sphere.position = new Vector3(0, -2, 0);
-		this.predictableMeshes.push(sphere);
-		this.grabbableObjects.push(sphere);
+	    var circle = MeshBuilder.CreateSphere("circle", {diameter: 1, segments: 32}, this.scene);
+	    circle.material = sphereMaterial;
+	    circle.position = new Vector3(0, -2, 0);
+		this.predictableMeshes.push(circle);
+		this.grabbableObjects.push(circle);
 		 
         // Creates a default skybox
         const environment = this.scene.createDefaultEnvironment({
@@ -358,14 +377,23 @@ class Game
               {
                     if(this.predictableMeshes[i].name == prediction)
                     {
-					  var meshCopy = new InstancedMesh(this.predictableMeshes[i].name + "instance" + this.count, <Mesh>this.predictableMeshes[i]);
-					  if (this.xrCamera){
-					  this.predictableMeshes[i].position = new Vector3(this.xrCamera.position.x,0.6,this.xrCamera.position.z + 1);
-					  //meshCopy = new Vector3(this.xrCamera.position.x,0.6,this.xrCamera.position.z + 4);
-					  }
+					  var meshCopy = this.predictableMeshes[i].clone((this.predictableMeshes[i].name+"copy"+this.count),null,false);
+					  if ((this.xrCamera)&&(meshCopy)){
+					  //this.predictableMeshes[i].position = new Vector3(this.xrCamera.position.x,0.6,this.xrCamera.position.z + 1);
+					  meshCopy.position = new Vector3(this.xrCamera.position.x,0.6,this.xrCamera.position.z + 3);
+					  meshCopy.isPickable;
 					  this.count = this.count + 1;
-					  this.grabbableObjects.push(this.predictableMeshes[i]);
-					  this.predictableMeshes[i].setParent(null);
+					  /*var meshChildren = meshCopy.getChildMeshes();
+					  if(meshCopy.name == "sphere"){
+						this.grabbableObjects.push(meshCopy);
+					  }
+					  
+		              for (var i = 0; i<meshChildren.length; i++){
+						  if((meshChildren[i].name == "circle") || (meshChildren[i].name == "star_02_StarBase_0") || (meshChildren[i].name == "node0") || (meshChildren[i].name == "margarita_flower") || (meshChildren[i].name == "root" )){
+							 this.grabbableObjects.push(meshChildren[i]);
+						  }
+					    }*/
+					  }
                     }
               }
         });
@@ -583,8 +611,10 @@ class Game
     {
         this.onLeftTrigger(this.leftController?.motionController?.getComponent("xr-standard-trigger"));
 		this.onLeftSqueeze(this.leftController?.motionController?.getComponent("xr-standard-squeeze"));
+		this.onLeftThumbstick(this.leftController?.motionController?.getComponent("xr-standard-thumbstick"));
         this.onRightTrigger(this.rightController?.motionController?.getComponent("xr-standard-trigger"));
 		this.onRightSqueeze(this.rightController?.motionController?.getComponent("xr-standard-squeeze"));
+		this.onRightThumbstick(this.rightController?.motionController?.getComponent("xr-standard-thumbstick"));
     }
 
     private onLeftTrigger(component?: WebXRControllerComponent)
@@ -644,28 +674,54 @@ class Game
         {
             if(component?.pressed)
             {
-                Logger.Log("left squeeze pressed");
+               this.laserPointer!.color = Color3.Green();
 
-                for(var i = 0; i < this.grabbableObjects.length && !this.leftGrabbedObject; i++)
+                var ray = new Ray(this.leftController!.pointer.position, this.leftController!.pointer.forward, 10);
+                var pickInfo = this.scene.pickWithRay(ray);
+
+                // Deselect the currently selected object 
+                if(this.selectedObjectL)
                 {
-                    if(this.leftController!.grip!.intersectsMesh(this.grabbableObjects[i], true))
-                    {
-                        this.leftGrabbedObject = this.grabbableObjects[i];
-                        this.leftGrabbedObject.setParent(this.leftController!.grip!);
-                    }
+                   // this.selectedObject.disableEdgesRendering();
+				    this.selectedObjectL.setParent(null);
+                    this.selectedObjectL = null;
+                }
+
+                // If an object was hit, select it
+                if((pickInfo?.hit)&&(pickInfo!.pickedMesh!.name != "plane"))
+                {
+                    this.selectedObjectL = pickInfo!.pickedMesh;
+                    //this.selectedObjectL!.enableEdgesRendering();
+
+                    // Parent the object to the transform on the laser pointer
+                    this.selectionTransformL!.position = new Vector3(0, 0, pickInfo.distance);
+                    this.selectedObjectL!.setParent(this.leftController!.pointer);
                 }
             }
             else
             {
-                Logger.Log("left squeeze released");
+                // Reset the laser pointer color
+                this.laserPointer!.color = Color3.Blue();
 
-                if(this.leftGrabbedObject)
+                // Release the object from the laser pointer
+                if(this.selectedObjectL)
                 {
-                    this.leftGrabbedObject.setParent(null);
-                    this.leftGrabbedObject = null;
-                }
+                    this.selectedObjectL!.setParent(null);
+                }  
             }
         }  
+    }
+	 private onLeftThumbstick(component?: WebXRControllerComponent)
+    {
+        // If we have an object that is currently attached to the laser pointer
+        if(component?.changes.axes && this.selectedObjectL && this.selectedObjectL.parent)
+        {
+            // Use delta time to calculate the proper speed
+            var moveDistance = -component.axes.y * (this.engine.getDeltaTime() / 1000) * 3;
+
+            // Translate the object along the depth ray in world space
+            this.selectedObjectL.translate(this.leftController!.pointer.forward, moveDistance, Space.WORLD);
+        }
     }
 	
     private onRightTrigger(component?: WebXRControllerComponent)
@@ -723,28 +779,54 @@ class Game
         {
             if(component?.pressed)
             {
-                Logger.Log("right squeeze pressed");
+               //this.laserPointer!.color = Color3.Green();
 
-                for(var i = 0; i < this.grabbableObjects.length && !this.rightGrabbedObject; i++)
+                var ray = new Ray(this.rightController!.pointer.position, this.rightController!.pointer.forward, 10);
+                var pickInfo = this.scene.pickWithRay(ray);
+
+                // Deselect the currently selected object 
+                if(this.selectedObjectR)
                 {
-                    if(this.rightController!.grip!.intersectsMesh(this.grabbableObjects[i], true))
-                    {
-                        this.rightGrabbedObject = this.grabbableObjects[i];
-                        this.rightGrabbedObject.setParent(this.rightController!.grip!);
-                    }
+                   // this.selectedObject.disableEdgesRendering();
+				   this.selectedObjectR.setParent(null);
+                    this.selectedObjectR = null;
+                }
+
+                // If an object was hit, select it
+                if((pickInfo?.hit)&& (pickInfo!.pickedMesh!.name != "plane"))
+                {
+                    this.selectedObjectR = pickInfo!.pickedMesh;
+                   // this.selectedObject!.enableEdgesRendering();
+
+                    // Parent the object to the transform on the laser pointer
+                    this.selectionTransformR!.position = new Vector3(0, 0, pickInfo.distance);
+                    this.selectedObjectR!.setParent(this.rightController!.pointer);
                 }
             }
             else
             {
-                Logger.Log("right squeeze released");
+                // Reset the laser pointer color
+                //this.laserPointer!.color = Color3.Blue();
 
-                if(this.rightGrabbedObject)
+                // Release the object from the laser pointer
+                if(this.selectedObjectR)
                 {
-                    this.rightGrabbedObject.setParent(null);
-                    this.rightGrabbedObject = null;
-                }
+                    this.selectedObjectR!.setParent(null);
+                }  
             }
         }  
+    }
+	 private onRightThumbstick(component?: WebXRControllerComponent)
+    {
+        // If we have an object that is currently attached to the laser pointer
+        if(component?.changes.axes && this.selectedObjectR && this.selectedObjectR.parent)
+        {
+            // Use delta time to calculate the proper speed
+            var moveDistance = -component.axes.y * (this.engine.getDeltaTime() / 1000) * 3;
+
+            // Translate the object along the depth ray in world space
+            this.selectedObjectR.translate(this.rightController!.pointer.forward, moveDistance, Space.WORLD);
+        }
     }
 }
 /******* End of the Game class ******/
