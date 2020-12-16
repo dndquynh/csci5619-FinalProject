@@ -112,7 +112,8 @@ class Game
         // ML
         this.model = null;
         this.points = [];
-        this.objectNames = ['flower', 'ice_cream', 'table', 'circle', 'star']
+        // this.objectNames = ['flower', 'ice_cream', 'table', 'circle', 'star']
+        this.objectNames = ['snowman', 'lollipop', 'table', 'circle', 'snowflake', 'crown', 'cookie', 'star', 'ice_cream', 'candle', 'sock', 'tree', 'flower', 'broom', 'bear'];
         this.textBlock = null;
 		this.predictableMeshes = [];
 		this.count = 0;
@@ -595,6 +596,10 @@ class Game
 			//   this.drawingCanvas.position = new Vector3(this.xrCamera.position.x, 0.6, this.xrCamera.position.z+5.0);
               this.drawingCanvas.setParent(this.xrCamera);
               this.drawingCanvas.position.y = -0.6;
+              this.drawingCanvas.position.x = 0;
+              this.drawingCanvas.rotation.x = 0;
+              this.drawingCanvas.rotation.y = 0;
+              this.drawingCanvas.rotation.z = 0;
 			}
 			//this.drawingCanvas.position.y = 0.6;
 		}

@@ -1,5 +1,15 @@
-flower
-ice_cream
+snowman
+lollipop
 table
 circle
+snowflake
+crown
+cookie
 star
+ice_cream
+candle
+sock
+tree
+flower
+broom
+bear
