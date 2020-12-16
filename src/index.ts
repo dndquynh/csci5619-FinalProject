@@ -14,7 +14,7 @@ import { MeshBuilder } from  "@babylonjs/core/Meshes/meshBuilder";
 import { StandardMaterial} from "@babylonjs/core/Materials/standardMaterial";
 import { Logger } from "@babylonjs/core/Misc/logger";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
-import {DynamicTexture, LinesMesh, Mesh, Ray} from "@babylonjs/core";
+import {DynamicTexture, LinesMesh, Mesh, PBRMaterial, Ray, Texture} from "@babylonjs/core";
 import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
 import { Quaternion } from "@babylonjs/core/Maths/math.vector";
 import { GUI3DManager } from "@babylonjs/gui/3D/gui3DManager"
@@ -313,6 +313,19 @@ class Game
 			this.grabbableObjects.push( worldTask4.loadedMeshes[0]);
         }
 
+        var worldTask5 = assetsManager.addMeshTask("world task", "", "assets/models/", "Candy-Cane.glb");
+        worldTask5.onSuccess = (task) => {
+            worldTask5.loadedMeshes[0].name = "candy";
+            worldTask5.loadedMeshes[0].position = new Vector3(0, 1, 0);
+            worldTask5.loadedMeshes.forEach(mesh => {
+                if (mesh.name === "Candy-Cane") {
+                    let candyTexture = new Texture("assets/textures/Candy-Cane-01-Color-Spec.png", this.scene);
+                    let mat = <PBRMaterial> mesh.material;
+                    mat.albedoTexture = candyTexture;
+                }
+            })
+        }
+
 		var sphereMaterial = new StandardMaterial("sphereMaterial", this.scene);
 	    sphereMaterial.diffuseColor = new Color3(0, 1, 0);
 	    var circle = MeshBuilder.CreateSphere("circle", {diameter: 1, segments: 32}, this.scene);
@@ -328,7 +341,10 @@ class Game
             skyboxSize: 50,
             skyboxColor: new Color3(0, 0, 0)
         });
-         assetsManager.load();
+        assetsManager.load();
+        // assetsManager.onFinish(() => {
+
+        // })
 
         // The manager automates some of the GUI creation steps
         var guiManager = new GUI3DManager(this.scene);
