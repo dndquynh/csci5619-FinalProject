@@ -262,8 +262,9 @@ class Game
             }
         });
 
-		 var assetsManager = new AssetsManager(this.scene);
-        // Create a task for each asset you want to load
+         var assetsManager = new AssetsManager(this.scene);
+
+        /**************************************** LOADING ASSETS *******************************************/
         var worldTask = assetsManager.addMeshTask("world task", "", "assets/models/", "ice_cream.glb");
         worldTask.onSuccess = (task) => {
             worldTask.loadedMeshes[0].name = "ice_cream";
@@ -353,6 +354,50 @@ class Game
                 }
             })
         }
+        // Need update model
+        var worldTask8 = assetsManager.addMeshTask("world task", "", "assets/models/", "bear.glb");
+        worldTask8.onSuccess = (task) => {
+            worldTask8.loadedMeshes[0].name = "bear";
+            worldTask8.loadedMeshes[0].position = new Vector3(0, 1, 0);
+        }
+        // Maybe
+        var worldTask9 = assetsManager.addMeshTask("world task", "", "assets/models/", "tree.glb");
+        worldTask9.onSuccess = (task) => {
+            worldTask9.loadedMeshes[0].name = "tree";
+            worldTask9.loadedMeshes[0].position = new Vector3(0, 1, 0);
+        }
+        var worldTask10 = assetsManager.addMeshTask("world task", "", "assets/models/", "snowflake.glb");
+        worldTask10.onSuccess = (task) => {
+            worldTask10.loadedMeshes[0].name = "snowflake";
+            worldTask10.loadedMeshes[0].position = new Vector3(0, 1, 0);
+            worldTask10.loadedMeshes[0].scaling = new Vector3(0.05, 0.05, 0.05);
+        }
+        // Need update
+        var worldTask11 = assetsManager.addMeshTask("world task", "", "assets/models/", "snowman.glb");
+        worldTask11.onSuccess = (task) => {
+            worldTask11.loadedMeshes[0].name = "snowman";
+            worldTask11.loadedMeshes[0].position = new Vector3(0, 1, 0);
+        }
+        var worldTask12 = assetsManager.addMeshTask("world task", "", "assets/models/", "crown.glb");
+        worldTask12.onSuccess = (task) => {
+            worldTask12.loadedMeshes[0].name = "crown";
+            worldTask12.loadedMeshes[0].position = new Vector3(0, 1, 0);
+        }
+        // Need update
+        var worldTask13 = assetsManager.addMeshTask("world task", "", "assets/models/", "broom.glb");
+        worldTask13.onSuccess = (task) => {
+            worldTask13.loadedMeshes[0].name = "broom";
+            worldTask13.loadedMeshes[0].position = new Vector3(0, 1, 0);
+            worldTask13.loadedMeshes[0].scaling = new Vector3(0.002, 0.002, 0.002);
+        }
+        // Might need update
+        var worldTask14 = assetsManager.addMeshTask("world task", "", "assets/models/", "cookie.glb");
+        worldTask14.onSuccess = (task) => {
+            worldTask14.loadedMeshes[0].name = "cookie";
+            worldTask14.loadedMeshes[0].position = new Vector3(0, 1, 0);
+            worldTask14.loadedMeshes[0].scaling = new Vector3(0.001, 0.001, 0.001);
+        }
+
 		var sphereMaterial = new StandardMaterial("sphereMaterial", this.scene);
 	    sphereMaterial.diffuseColor = new Color3(0, 1, 0);
 	    var circle = MeshBuilder.CreateSphere("circle", {diameter: 1, segments: 32}, this.scene);
@@ -360,6 +405,7 @@ class Game
 	    circle.position = new Vector3(0, -2, 0);
 		this.predictableMeshes.push(circle);
 		this.grabbableObjects.push(circle);
+        /**************************************** END ******************************************************/
 
         // Creates a default skybox
         const environment = this.scene.createDefaultEnvironment({
