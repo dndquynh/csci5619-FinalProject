@@ -325,6 +325,18 @@ class Game
                 }
             })
         }
+        var worldTask6 = assetsManager.addMeshTask("world task", "", "assets/models/", "ChristmasSock.glb");
+        worldTask6.onSuccess = (task) => {
+            worldTask6.loadedMeshes[0].name = "sock";
+            worldTask6.loadedMeshes[0].position = new Vector3(0, 1, 0);
+            worldTask6.loadedMeshes.forEach(mesh => {
+                if (mesh.name === "ChristmasSock") {
+                    let sockTexture = new Texture("assets/textures/Candie_Sock_a.png", this.scene, undefined, false);
+                    let mat = <PBRMaterial> mesh.material;
+                    mat.albedoTexture = sockTexture;
+                }
+            })
+        }
 
 		var sphereMaterial = new StandardMaterial("sphereMaterial", this.scene);
 	    sphereMaterial.diffuseColor = new Color3(0, 1, 0);
