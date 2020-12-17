@@ -337,7 +337,22 @@ class Game
                 }
             })
         }
-
+        var worldTask7 = assetsManager.addMeshTask("world task", "", "assets/models/", "Candle_Small.glb");
+        worldTask7.onSuccess = (task) => {
+            worldTask7.loadedMeshes[0].name = "candle";
+            worldTask7.loadedMeshes[0].position = new Vector3(0, 1, 0);
+            worldTask7.loadedMeshes.forEach(mesh => {
+                if (mesh.name === "Candle_Small") {
+                    let candleATexture = new Texture("assets/textures/Candle_a.png", this.scene, undefined, false);
+                    let candleAOTexture = new Texture("assets/textures/Candle_ao.png", this.scene, undefined, false);
+                    let candleNTexture = new Texture("assets/textures/Candle_n.png", this.scene, undefined, false);
+                    let mat = <PBRMaterial> mesh.material;
+                    mat.albedoTexture = candleATexture;
+                    mat.bumpTexture = candleNTexture;
+                    mat.ambientTexture = candleAOTexture;
+                }
+            })
+        }
 		var sphereMaterial = new StandardMaterial("sphereMaterial", this.scene);
 	    sphereMaterial.diffuseColor = new Color3(0, 1, 0);
 	    var circle = MeshBuilder.CreateSphere("circle", {diameter: 1, segments: 32}, this.scene);
