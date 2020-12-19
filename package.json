@@ -1,7 +1,7 @@
 {
-    "name": "Assignment-4",
+    "name": "Final Project",
     "version": "1.0.0",
-    "description": "Assignment 4, CS 5619, Fall 2020",
+    "description": "Final Project, CS 5619, Fall 2020",
     "main": "index.ts",
     "dependencies": {
         "@babylonjs/core": "^4.1",

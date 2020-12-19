@@ -273,7 +273,7 @@ class Game
 			if( worldTask.loadedMeshes[0].rotationQuaternion){
             worldTask.loadedMeshes[0].rotationQuaternion.multiplyInPlace(meshRotation);
 			}
-            worldTask.loadedMeshes[0].scaling = new Vector3(0.1,0.1,0.1);
+            worldTask.loadedMeshes[0].scaling = new Vector3(0.01,0.01,0.01);
 			this.predictableMeshes.push( worldTask.loadedMeshes[0]);
 			this.grabbableObjects.push( worldTask.loadedMeshes[0]);
         }
@@ -292,7 +292,7 @@ class Game
         worldTask3.onSuccess = (task) => {
             worldTask3.loadedMeshes[0].name = "star";
             worldTask3.loadedMeshes[0].position = new Vector3(0, -2, 0);
-			var meshRotation = Quaternion.FromEulerAngles(0, Math.PI / 2, 0);
+			var meshRotation = Quaternion.FromEulerAngles(0, 0, 0);
            if( worldTask3.loadedMeshes[0].rotationQuaternion){
             worldTask3.loadedMeshes[0].rotationQuaternion.multiplyInPlace(meshRotation);
 			}
@@ -364,7 +364,8 @@ class Game
         var worldTask9 = assetsManager.addMeshTask("world task", "", "assets/models/", "tree.glb");
         worldTask9.onSuccess = (task) => {
             worldTask9.loadedMeshes[0].name = "tree";
-            worldTask9.loadedMeshes[0].position = new Vector3(0, 1, 0);
+            worldTask9.loadedMeshes[0].position = new Vector3(6, 0, 0);
+            worldTask9.loadedMeshes[0].scaling = new Vector3(0.005, 0.005, 0.005);
         }
         var worldTask10 = assetsManager.addMeshTask("world task", "", "assets/models/", "snowflake.glb");
         worldTask10.onSuccess = (task) => {
@@ -373,15 +374,29 @@ class Game
             worldTask10.loadedMeshes[0].scaling = new Vector3(0.05, 0.05, 0.05);
         }
         // Need update
-        var worldTask11 = assetsManager.addMeshTask("world task", "", "assets/models/", "snowman.glb");
+        var worldTask11 = assetsManager.addMeshTask("world task", "", "assets/models/", "Toy_Snowman.glb");
         worldTask11.onSuccess = (task) => {
             worldTask11.loadedMeshes[0].name = "snowman";
             worldTask11.loadedMeshes[0].position = new Vector3(0, 1, 0);
+            worldTask11.loadedMeshes[0].rotationQuaternion =  Quaternion.FromEulerAngles(0, Math.PI * 2, 0);
+            worldTask11.loadedMeshes.forEach(mesh => {
+                console.log(mesh.name);
+                if (mesh.name === "Toy_Snowman") {
+                    let snowmanATexture = new Texture("assets/textures/TreeToys_a.png", this.scene, undefined, false);
+                    let snowmanAOTexture = new Texture("assets/textures/TreeToys_ao.png", this.scene, undefined, false);
+                    // console.log("snowman texture");
+                    let mat = <PBRMaterial> mesh.material;
+                    // let mat = new PBRMaterial("snowman_mat", this.scene);
+                    mat.albedoTexture = snowmanATexture;
+                    mat.ambientTexture = snowmanAOTexture;
+                }
+            })
         }
         var worldTask12 = assetsManager.addMeshTask("world task", "", "assets/models/", "crown.glb");
         worldTask12.onSuccess = (task) => {
             worldTask12.loadedMeshes[0].name = "crown";
             worldTask12.loadedMeshes[0].position = new Vector3(0, 1, 0);
+            worldTask12.loadedMeshes[0].scaling = new Vector3(0.001, 0.001, 0.001);
         }
         // Need update
         var worldTask13 = assetsManager.addMeshTask("world task", "", "assets/models/", "broom.glb");
@@ -391,11 +406,17 @@ class Game
             worldTask13.loadedMeshes[0].scaling = new Vector3(0.002, 0.002, 0.002);
         }
         // Might need update
-        var worldTask14 = assetsManager.addMeshTask("world task", "", "assets/models/", "cookie.glb");
+        var worldTask14 = assetsManager.addMeshTask("world task", "", "assets/models/", "Cookie_man.glb");
         worldTask14.onSuccess = (task) => {
             worldTask14.loadedMeshes[0].name = "cookie";
             worldTask14.loadedMeshes[0].position = new Vector3(0, 1, 0);
-            worldTask14.loadedMeshes[0].scaling = new Vector3(0.001, 0.001, 0.001);
+            worldTask14.loadedMeshes.forEach(mesh => {
+                if (mesh.name === "Cookie_man") {
+                    let cookieTexture = new Texture("assets/textures/Cookie_man.png", this.scene, undefined, false);
+                    let mat = <PBRMaterial> mesh.material;
+                    mat.albedoTexture = cookieTexture;
+                }
+            })
         }
 
 		var sphereMaterial = new StandardMaterial("sphereMaterial", this.scene);
