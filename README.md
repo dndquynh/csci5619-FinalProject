@@ -7,9 +7,9 @@
 
 You should fill out this information before submitting your assignment.  Make sure to document the name and source of any third party assets such as 3D models, textures, or any other content used that was not solely written by you.  Include sufficient detail for the instructor or TA to easily find them, such as asset store or download links.
 
-Name:
+Name: Quynh Do, Kathryn Altpeter
 
-UMN Email:
+UMN Email: doxxx211@unm.edu, altpe001
 
 Build URL:
 
