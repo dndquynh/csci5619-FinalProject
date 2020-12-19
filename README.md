@@ -9,7 +9,7 @@ You should fill out this information before submitting your assignment.  Make su
 
 Name: Quynh Do, Kathryn Altpeter
 
-UMN Email: doxxx211@unm.edu, altpe001
+UMN Email: doxxx211@unm.edu, altpe001@umn.edu
 
 Build URL:
 
