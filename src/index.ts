@@ -54,8 +54,6 @@ class Game
     private worldNode: TransformNode | null;
     private dynamicTexture: DynamicTexture | null;
     private ctx: CanvasRenderingContext2D | null;
-    private resultDynamicTexture: DynamicTexture | null;
-    private resultCtx: CanvasRenderingContext2D | null;
     private painting: Boolean;
 
     private laserPointer: LinesMesh | null;
@@ -103,8 +101,6 @@ class Game
         this.laserPointer = null;
         this.dynamicTexture = null;
         this.ctx = null;
-        this.resultCtx = null;
-        this.resultDynamicTexture = null;
 
         this.painting = false;
         this.posX = 0;
@@ -207,24 +203,6 @@ class Game
         this.dynamicTexture.update();
         plane.enableEdgesRendering();
 
-        // Result canvas
-        var resultPlane = MeshBuilder.CreatePlane("resultplane", {size:2}, this.scene);
-        resultPlane.position = new Vector3(-2, 0.6, 5);
-        resultPlane.isPickable = true;
-
-        // Dynamic texture for drawing canvas
-        this.resultDynamicTexture = new DynamicTexture("result dynamic texture", {width: 300, height: 300}, this.scene, false);
-        var resultCanvasMaterial = new StandardMaterial("result canvas material", this.scene);
-        resultCanvasMaterial.diffuseTexture = this.resultDynamicTexture;
-        resultPlane.material = resultCanvasMaterial;
-        resultCanvasMaterial.emissiveColor = Color3.White();
-
-        this.resultCtx = this.resultDynamicTexture.getContext();
-        this.resultCtx.fillStyle = "white";
-        this.resultCtx.fillRect(0, 0, this.resultCtx.canvas.width, this.resultCtx.canvas.height);
-        this.resultDynamicTexture.update();
-        resultPlane.enableEdgesRendering();
-
         // Assigns the controllers
         xrHelper.input.onControllerAddedObservable.add((inputSource) =>
         {
@@ -275,13 +253,13 @@ class Game
 			if( worldTask.loadedMeshes[0].rotationQuaternion){
             worldTask.loadedMeshes[0].rotationQuaternion.multiplyInPlace(meshRotation);
 			}
-            worldTask.loadedMeshes[0].scaling = new Vector3(0.01,0.01,0.01);
+            worldTask.loadedMeshes[0].scaling = new Vector3(0.003,0.003,0.003);
             worldTask.loadedMeshes[0].setEnabled(false);
 			this.predictableMeshes.push( worldTask.loadedMeshes[0]);
 			this.grabbableObjects.push( worldTask.loadedMeshes[0]);
         }
 
-		 var worldTask2 = assetsManager.addMeshTask("world task", "", "assets/models/", "flower.glb");
+		var worldTask2 = assetsManager.addMeshTask("world task", "", "assets/models/", "flower.glb");
         worldTask2.onSuccess = (task) => {
             worldTask2.loadedMeshes[0].name = "flower";
             worldTask2.loadedMeshes[0].position = new Vector3(0, -2, 0);
@@ -292,21 +270,20 @@ class Game
 			this.grabbableObjects.push( worldTask2.loadedMeshes[0]);
         }
 
-		 var worldTask3 = assetsManager.addMeshTask("world task", "", "assets/models/", "star.glb");
+		var worldTask3 = assetsManager.addMeshTask("world task", "", "assets/models/", "star.glb");
         worldTask3.onSuccess = (task) => {
             worldTask3.loadedMeshes[0].name = "star";
             worldTask3.loadedMeshes[0].position = new Vector3(0, -2, 0);
-			var meshRotation = Quaternion.FromEulerAngles(0, 0, 0);
+			var meshRotation = Quaternion.FromEulerAngles(0, Math.PI / 2, 0);
            if( worldTask3.loadedMeshes[0].rotationQuaternion){
             worldTask3.loadedMeshes[0].rotationQuaternion.multiplyInPlace(meshRotation);
 			}
-            worldTask3.loadedMeshes[0].scaling = new Vector3(0.001,0.001,0.001);
+            worldTask3.loadedMeshes[0].scaling = new Vector3(0.0005,0.0005,0.0005);
             worldTask3.loadedMeshes[0].setEnabled(false);
 			this.predictableMeshes.push( worldTask3.loadedMeshes[0]);
 			this.grabbableObjects.push( worldTask3.loadedMeshes[0]);
         }
-
-		 var worldTask4 = assetsManager.addMeshTask("world task", "", "assets/models/", "table.glb");
+		var worldTask4 = assetsManager.addMeshTask("world task", "", "assets/models/", "table.glb");
         worldTask4.onSuccess = (task) => {
             worldTask4.loadedMeshes[0].name = "table";
             worldTask4.loadedMeshes[0].position = new Vector3(0, -2, 0);
@@ -372,11 +349,12 @@ class Game
 			this.predictableMeshes.push( worldTask7.loadedMeshes[0]);
 			this.grabbableObjects.push( worldTask7.loadedMeshes[0]);
         }
+        // bear too small
         var worldTask8 = assetsManager.addMeshTask("world task", "", "assets/models/", "Teddybear.glb");
         worldTask8.onSuccess = (task) => {
             worldTask8.loadedMeshes[0].name = "bear";
             worldTask8.loadedMeshes[0].position = new Vector3(0, 1, 0);
-            worldTask8.loadedMeshes[0].scaling = new Vector3(0.01, 0.01, 0.01);
+            worldTask8.loadedMeshes[0].scaling = new Vector3(0.05, 0.05, 0.05);
             worldTask8.loadedMeshes.forEach(mesh => {
                 if (mesh.name === "Teddybear") {
                     let bearTexture = new Texture("assets/textures/Christmas-Presents-01.png", this.scene, undefined, false);
@@ -388,23 +366,23 @@ class Game
 			this.predictableMeshes.push(worldTask8.loadedMeshes[0]);
 			this.grabbableObjects.push(worldTask8.loadedMeshes[0]);
         }
-        // Maybe
         var worldTask9 = assetsManager.addMeshTask("world task", "", "assets/models/", "tree.glb");
         worldTask9.onSuccess = (task) => {
             worldTask9.loadedMeshes[0].name = "tree";
-            worldTask9.loadedMeshes[0].position = new Vector3(5, 0, 0);
-            worldTask9.loadedMeshes[0].scaling = new Vector3(0.002, 0.002, 0.002);
+            worldTask9.loadedMeshes[0].position = new Vector3(3, -0.5, 0);
+            worldTask9.loadedMeshes[0].scaling = new Vector3(0.0035, 0.0035, 0.0035);
             worldTask9.loadedMeshes.forEach(mesh => {
                 if (mesh.name === "Branch_Branch_0" || mesh.name === "Tree_Tree_0") {
                     mesh.isPickable = false;
                 }
             })
         }
+
         var worldTask10 = assetsManager.addMeshTask("world task", "", "assets/models/", "snowflake.glb");
         worldTask10.onSuccess = (task) => {
             worldTask10.loadedMeshes[0].name = "snowflake";
             worldTask10.loadedMeshes[0].position = new Vector3(0, 1, 0);
-            worldTask10.loadedMeshes[0].scaling = new Vector3(0.05, 0.05, 0.05);
+            worldTask10.loadedMeshes[0].scaling = new Vector3(0.03, 0.03, 0.03);
             worldTask10.loadedMeshes[0].setEnabled(false);
 			this.predictableMeshes.push( worldTask10.loadedMeshes[0]);
 			this.grabbableObjects.push( worldTask10.loadedMeshes[0]);
@@ -414,7 +392,8 @@ class Game
         worldTask11.onSuccess = (task) => {
             worldTask11.loadedMeshes[0].name = "snowman";
             worldTask11.loadedMeshes[0].position = new Vector3(0, 1, 0);
-            worldTask11.loadedMeshes[0].rotationQuaternion =  Quaternion.FromEulerAngles(0, Math.PI * 2, 0);
+            worldTask11.loadedMeshes[0].scaling = new Vector3(5, 5, 5);
+            worldTask11.loadedMeshes[0].rotationQuaternion =  Quaternion.FromEulerAngles(0, Math.PI, 0);
             worldTask11.loadedMeshes.forEach(mesh => {
                 if (mesh.name === "Toy_Snowman") {
                     let snowmanATexture = new Texture("assets/textures/TreeToys_a.png", this.scene, undefined, false);
@@ -433,7 +412,7 @@ class Game
         worldTask12.onSuccess = (task) => {
             worldTask12.loadedMeshes[0].name = "crown";
             worldTask12.loadedMeshes[0].position = new Vector3(0, 1, 0);
-            worldTask12.loadedMeshes[0].scaling = new Vector3(0.001, 0.001, 0.001);
+            worldTask12.loadedMeshes[0].scaling = new Vector3(0.005, 0.005, 0.005);
             worldTask12.loadedMeshes[0].setEnabled(false);
 			this.predictableMeshes.push( worldTask12.loadedMeshes[0]);
 			this.grabbableObjects.push( worldTask12.loadedMeshes[0]);
@@ -451,6 +430,7 @@ class Game
         worldTask14.onSuccess = (task) => {
             worldTask14.loadedMeshes[0].name = "cookie";
             worldTask14.loadedMeshes[0].position = new Vector3(0, 1, 0);
+            worldTask14.loadedMeshes[0].rotationQuaternion = Quaternion.FromEulerAngles(-Math.PI / 2, 0, 0);
             worldTask14.loadedMeshes.forEach(mesh => {
                 if (mesh.name === "Cookie_man") {
                     let cookieTexture = new Texture("assets/textures/Cookie_man.png", this.scene, undefined, false);
@@ -463,11 +443,13 @@ class Game
 			this.grabbableObjects.push( worldTask14.loadedMeshes[0]);
         }
 
+        // Sphere smaller, maybe random color
 		var sphereMaterial = new StandardMaterial("sphereMaterial", this.scene);
 	    sphereMaterial.diffuseColor = new Color3(0, 1, 0);
 	    var circle = MeshBuilder.CreateSphere("circle", {diameter: 1, segments: 32}, this.scene);
 	    circle.material = sphereMaterial;
         circle.position = new Vector3(0, -2, 0);
+        circle.scaling = new Vector3(0.15, 0.15, 0.15);
         circle.setEnabled(false);
 		this.predictableMeshes.push(circle);
 		this.grabbableObjects.push(circle);
@@ -495,7 +477,7 @@ class Game
 
         // Link a transform node so we can move the button around
         var testButtonTransform = new TransformNode("testButtonTransform", this.scene);
-        testButtonTransform.rotation.y = 15 * Math.PI / 180;
+        testButtonTransform.rotation.y = 45 * Math.PI / 180;
         testButton.linkToTransformNode(testButtonTransform);
 
         // Create the test button text
@@ -527,7 +509,7 @@ class Game
         testButton.onPointerDownObservable.add(() => {
             this.currentResult = this.predictResult();
         });
-		
+
 		// Create a test button
         var confirmButton = new Button3D("confirmButton");
         guiManager.addControl(confirmButton);
@@ -538,7 +520,7 @@ class Game
 
         // Link a transform node so we can move the button around
         var confirmButtonTransform = new TransformNode("confirmButtonTransform", this.scene);
-        confirmButtonTransform.rotation.y = 15 * Math.PI / 180;
+        confirmButtonTransform.rotation.y = 45 * Math.PI / 180;
         confirmButton.linkToTransformNode(confirmButtonTransform);
 
         // Create the test button text
@@ -602,7 +584,7 @@ class Game
 
         // Link a transform node so we can move the button around
         var clearCanvasButtonTransform = new TransformNode("clearCanvasButtonTransform", this.scene);
-        clearCanvasButtonTransform.rotation.y = 45 * Math.PI / 180;
+        clearCanvasButtonTransform.rotation.y = 15 * Math.PI / 180;
         clearCanvasButton.linkToTransformNode(clearCanvasButtonTransform);
 
         // Create the test button text
@@ -719,11 +701,6 @@ class Game
         const dpi = window.devicePixelRatio
         const imgData = this.ctx!.getImageData(minBoundingBox.min.x * dpi, minBoundingBox.min.y * dpi,
                                                       (minBoundingBox.max.x - minBoundingBox.min.x) * dpi, (minBoundingBox.max.y - minBoundingBox.min.y) * dpi);
-        this.resultCtx!.clearRect(0,0, this.resultCtx!.canvas.width, this.resultCtx!.canvas.height);
-        this.resultCtx!.fillStyle = "white";
-        this.resultCtx!.fillRect(0, 0, this.resultCtx!.canvas.width, this.resultCtx!.canvas.height);
-        this.resultCtx!.putImageData(imgData, 0, 0);
-        this.resultDynamicTexture!.update();
         return imgData
     }
 
