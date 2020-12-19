@@ -5,7 +5,7 @@
 
 import { Engine } from "@babylonjs/core/Engines/engine";
 import { Scene } from "@babylonjs/core/scene";
-import { Vector3, Color3, Matrix, Vector2, Space } from "@babylonjs/core/Maths/math";
+import { Vector3, Color3, Matrix, Vector2, Space} from "@babylonjs/core/Maths/math";
 import { UniversalCamera } from "@babylonjs/core/Cameras/universalCamera";
 import { WebXRInputSource } from "@babylonjs/core/XR/webXRInputSource";
 import { WebXRCamera } from "@babylonjs/core/XR/webXRCamera";
@@ -61,6 +61,7 @@ class Game
     private laserPointer: LinesMesh | null;
 
     private model: LayersModel | null;
+	private currentResult: string;
     private points: Array<Vector2>;
     private objectNames: Array<string>;
     private posX: number;
@@ -110,6 +111,7 @@ class Game
         this.posY = 0;
 
         // ML
+		this.currentResult = "";
         this.model = null;
         this.points = [];
         // this.objectNames = ['flower', 'ice_cream', 'table', 'circle', 'star']
@@ -523,10 +525,53 @@ class Game
 
         //  Make prediction
         testButton.onPointerDownObservable.add(() => {
-            var prediction = this.predictResult();
+            this.currentResult = this.predictResult();
+        });
+		
+		// Create a test button
+        var confirmButton = new Button3D("confirmButton");
+        guiManager.addControl(confirmButton);
+
+        // This must be done after addControl to overwrite the default content
+        confirmButton.position = new Vector3(0, 1.0, 3);
+        confirmButton.scaling.y = .5;
+
+        // Link a transform node so we can move the button around
+        var confirmButtonTransform = new TransformNode("confirmButtonTransform", this.scene);
+        confirmButtonTransform.rotation.y = 15 * Math.PI / 180;
+        confirmButton.linkToTransformNode(confirmButtonTransform);
+
+        // Create the test button text
+        var confirmButtonText = new TextBlock();
+        confirmButtonText.text = "Confirm";
+        confirmButtonText.color = "white";
+        confirmButtonText.fontSize = 24;
+        confirmButtonText.scaleY = 2;
+        confirmButton.content = confirmButtonText;
+
+
+        // Type cast the button material so we can change the color
+        var confirmButtonMaterial = <StandardMaterial>confirmButton.mesh!.material;
+
+        // Custom background color
+        var backgroundColor = new Color3(.284, .73, .831);
+        confirmButtonMaterial.diffuseColor = backgroundColor;
+        confirmButton.pointerOutAnimation = () => {
+            confirmButtonMaterial.diffuseColor = backgroundColor;
+        }
+
+        // Custom hover color
+        var hoverColor = new Color3(.752, .53, .735);
+        confirmButton.pointerEnterAnimation = () => {
+            confirmButtonMaterial.diffuseColor = hoverColor;
+        }
+
+        //  Make prediction
+        confirmButton.onPointerDownObservable.add(() => {
+			if(this.currentResult!=""){
              for(var i = 0; i < this.predictableMeshes.length; i++)
               {
-                    if(this.predictableMeshes[i].name == prediction)
+                    if(this.predictableMeshes[i].name == this.currentResult)
                     {
 					  var meshCopy = this.predictableMeshes[i].clone((this.predictableMeshes[i].name+"copy"+this.count),null,false);
 					  if ((this.xrCamera)&&(meshCopy)){
@@ -535,20 +580,16 @@ class Game
                       meshCopy.isPickable;
                       meshCopy.setEnabled(true);
                       meshCopy.getChildMeshes().forEach(mesh => mesh.setEnabled(true));
-					  this.count = this.count + 1;
-					  /*var meshChildren = meshCopy.getChildMeshes();
-					  if(meshCopy.name == "sphere"){
-						this.grabbableObjects.push(meshCopy);
+					  if(meshCopy.name.startsWith("circlecopy")){
+						  	var newSphereMaterial = new StandardMaterial("newSphereMaterial"+this.count, this.scene);
+	                        newSphereMaterial.diffuseColor = Color3.Random();
+							meshCopy.material = newSphereMaterial;
 					  }
-
-		              for (var i = 0; i<meshChildren.length; i++){
-						  if((meshChildren[i].name == "circle") || (meshChildren[i].name == "star_02_StarBase_0") || (meshChildren[i].name == "node0") || (meshChildren[i].name == "margarita_flower") || (meshChildren[i].name == "root" )){
-							 this.grabbableObjects.push(meshChildren[i]);
-						  }
-					    }*/
+					  this.count = this.count + 1;
 					  }
                     }
               }
+			}
         });
 
         // Create a test button
