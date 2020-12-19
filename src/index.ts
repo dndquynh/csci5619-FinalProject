@@ -274,6 +274,7 @@ class Game
             worldTask.loadedMeshes[0].rotationQuaternion.multiplyInPlace(meshRotation);
 			}
             worldTask.loadedMeshes[0].scaling = new Vector3(0.01,0.01,0.01);
+            worldTask.loadedMeshes[0].setEnabled(false);
 			this.predictableMeshes.push( worldTask.loadedMeshes[0]);
 			this.grabbableObjects.push( worldTask.loadedMeshes[0]);
         }
@@ -283,7 +284,8 @@ class Game
             worldTask2.loadedMeshes[0].name = "flower";
             worldTask2.loadedMeshes[0].position = new Vector3(0, -2, 0);
             worldTask2.loadedMeshes[0].rotation = Vector3.Zero();
-            worldTask2.loadedMeshes[0].scaling = new Vector3(0.1,0.1,0.1);
+            worldTask2.loadedMeshes[0].scaling = new Vector3(0.01,0.01,0.01);
+            worldTask2.loadedMeshes[0].setEnabled(false);
 			this.predictableMeshes.push( worldTask2.loadedMeshes[0]);
 			this.grabbableObjects.push( worldTask2.loadedMeshes[0]);
         }
@@ -297,6 +299,7 @@ class Game
             worldTask3.loadedMeshes[0].rotationQuaternion.multiplyInPlace(meshRotation);
 			}
             worldTask3.loadedMeshes[0].scaling = new Vector3(0.001,0.001,0.001);
+            worldTask3.loadedMeshes[0].setEnabled(false);
 			this.predictableMeshes.push( worldTask3.loadedMeshes[0]);
 			this.grabbableObjects.push( worldTask3.loadedMeshes[0]);
         }
@@ -310,21 +313,27 @@ class Game
             worldTask4.loadedMeshes[0].rotationQuaternion.multiplyInPlace(meshRotation);
 			}
             worldTask4.loadedMeshes[0].scaling = new Vector3(0.1,0.1,0.1);
+            worldTask4.loadedMeshes[0].setEnabled(false);
 			this.predictableMeshes.push( worldTask4.loadedMeshes[0]);
 			this.grabbableObjects.push( worldTask4.loadedMeshes[0]);
         }
 
         var worldTask5 = assetsManager.addMeshTask("world task", "", "assets/models/", "Candy-Cane.glb");
         worldTask5.onSuccess = (task) => {
-            worldTask5.loadedMeshes[0].name = "candy";
+            worldTask5.loadedMeshes[0].name = "lollipop";
             worldTask5.loadedMeshes[0].position = new Vector3(0, 1, 0);
+            worldTask5.loadedMeshes[0].scaling = new Vector3(0.1, 0.1, 0.1);
             worldTask5.loadedMeshes.forEach(mesh => {
                 if (mesh.name === "Candy-Cane") {
                     let candyTexture = new Texture("assets/textures/Candy-Cane-01-Color-Spec.png", this.scene);
                     let mat = <PBRMaterial> mesh.material;
                     mat.albedoTexture = candyTexture;
+                    mesh.position = new Vector3(0,0,0);
                 }
             })
+            worldTask5.loadedMeshes[0].setEnabled(false);
+			this.predictableMeshes.push( worldTask5.loadedMeshes[0]);
+			this.grabbableObjects.push( worldTask5.loadedMeshes[0]);
         }
         var worldTask6 = assetsManager.addMeshTask("world task", "", "assets/models/", "ChristmasSock.glb");
         worldTask6.onSuccess = (task) => {
@@ -335,8 +344,12 @@ class Game
                     let sockTexture = new Texture("assets/textures/Candie_Sock_a.png", this.scene, undefined, false);
                     let mat = <PBRMaterial> mesh.material;
                     mat.albedoTexture = sockTexture;
+                    mesh.position = new Vector3(0,0,0);
                 }
             })
+            worldTask6.loadedMeshes[0].setEnabled(false);
+			this.predictableMeshes.push( worldTask6.loadedMeshes[0]);
+			this.grabbableObjects.push( worldTask6.loadedMeshes[0]);
         }
         var worldTask7 = assetsManager.addMeshTask("world task", "", "assets/models/", "Candle_Small.glb");
         worldTask7.onSuccess = (task) => {
@@ -353,6 +366,9 @@ class Game
                     mat.ambientTexture = candleAOTexture;
                 }
             })
+            worldTask7.loadedMeshes[0].setEnabled(false);
+			this.predictableMeshes.push( worldTask7.loadedMeshes[0]);
+			this.grabbableObjects.push( worldTask7.loadedMeshes[0]);
         }
         var worldTask8 = assetsManager.addMeshTask("world task", "", "assets/models/", "Teddybear.glb");
         worldTask8.onSuccess = (task) => {
@@ -366,19 +382,30 @@ class Game
                     mat.albedoTexture = bearTexture;
                 }
             })
+            worldTask8.loadedMeshes[0].setEnabled(false);
+			this.predictableMeshes.push(worldTask8.loadedMeshes[0]);
+			this.grabbableObjects.push(worldTask8.loadedMeshes[0]);
         }
         // Maybe
         var worldTask9 = assetsManager.addMeshTask("world task", "", "assets/models/", "tree.glb");
         worldTask9.onSuccess = (task) => {
             worldTask9.loadedMeshes[0].name = "tree";
-            worldTask9.loadedMeshes[0].position = new Vector3(6, 0, 0);
-            worldTask9.loadedMeshes[0].scaling = new Vector3(0.005, 0.005, 0.005);
+            worldTask9.loadedMeshes[0].position = new Vector3(5, 0, 0);
+            worldTask9.loadedMeshes[0].scaling = new Vector3(0.002, 0.002, 0.002);
+            worldTask9.loadedMeshes.forEach(mesh => {
+                if (mesh.name === "Branch_Branch_0" || mesh.name === "Tree_Tree_0") {
+                    mesh.isPickable = false;
+                }
+            })
         }
         var worldTask10 = assetsManager.addMeshTask("world task", "", "assets/models/", "snowflake.glb");
         worldTask10.onSuccess = (task) => {
             worldTask10.loadedMeshes[0].name = "snowflake";
             worldTask10.loadedMeshes[0].position = new Vector3(0, 1, 0);
             worldTask10.loadedMeshes[0].scaling = new Vector3(0.05, 0.05, 0.05);
+            worldTask10.loadedMeshes[0].setEnabled(false);
+			this.predictableMeshes.push( worldTask10.loadedMeshes[0]);
+			this.grabbableObjects.push( worldTask10.loadedMeshes[0]);
         }
 
         var worldTask11 = assetsManager.addMeshTask("world task", "", "assets/models/", "Toy_Snowman.glb");
@@ -395,6 +422,9 @@ class Game
                     mat.ambientTexture = snowmanAOTexture;
                 }
             })
+            worldTask11.loadedMeshes[0].setEnabled(false);
+			this.predictableMeshes.push( worldTask11.loadedMeshes[0]);
+			this.grabbableObjects.push( worldTask11.loadedMeshes[0]);
         }
 
         var worldTask12 = assetsManager.addMeshTask("world task", "", "assets/models/", "crown.glb");
@@ -402,11 +432,17 @@ class Game
             worldTask12.loadedMeshes[0].name = "crown";
             worldTask12.loadedMeshes[0].position = new Vector3(0, 1, 0);
             worldTask12.loadedMeshes[0].scaling = new Vector3(0.001, 0.001, 0.001);
+            worldTask12.loadedMeshes[0].setEnabled(false);
+			this.predictableMeshes.push( worldTask12.loadedMeshes[0]);
+			this.grabbableObjects.push( worldTask12.loadedMeshes[0]);
         }
         var worldTask13 = assetsManager.addMeshTask("world task", "", "assets/models/", "WitchBroom.glb");
         worldTask13.onSuccess = (task) => {
             worldTask13.loadedMeshes[0].name = "broom";
             worldTask13.loadedMeshes[0].position = new Vector3(0, 1, 0);
+            worldTask13.loadedMeshes[0].setEnabled(false);
+			this.predictableMeshes.push( worldTask13.loadedMeshes[0]);
+			this.grabbableObjects.push( worldTask13.loadedMeshes[0]);
         }
 
         var worldTask14 = assetsManager.addMeshTask("world task", "", "assets/models/", "Cookie_man.glb");
@@ -420,13 +456,17 @@ class Game
                     mat.albedoTexture = cookieTexture;
                 }
             })
+            worldTask14.loadedMeshes[0].setEnabled(false);
+			this.predictableMeshes.push( worldTask14.loadedMeshes[0]);
+			this.grabbableObjects.push( worldTask14.loadedMeshes[0]);
         }
 
 		var sphereMaterial = new StandardMaterial("sphereMaterial", this.scene);
 	    sphereMaterial.diffuseColor = new Color3(0, 1, 0);
 	    var circle = MeshBuilder.CreateSphere("circle", {diameter: 1, segments: 32}, this.scene);
 	    circle.material = sphereMaterial;
-	    circle.position = new Vector3(0, -2, 0);
+        circle.position = new Vector3(0, -2, 0);
+        circle.setEnabled(false);
 		this.predictableMeshes.push(circle);
 		this.grabbableObjects.push(circle);
         /**************************************** END ******************************************************/
@@ -439,9 +479,6 @@ class Game
             skyboxColor: new Color3(0, 0, 0)
         });
         assetsManager.load();
-        // assetsManager.onFinish(() => {
-
-        // })
 
         // The manager automates some of the GUI creation steps
         var guiManager = new GUI3DManager(this.scene);
@@ -495,7 +532,9 @@ class Game
 					  if ((this.xrCamera)&&(meshCopy)){
 					  //this.predictableMeshes[i].position = new Vector3(this.xrCamera.position.x,0.6,this.xrCamera.position.z + 1);
 					  meshCopy.position = new Vector3(this.xrCamera.position.x,0.6,this.xrCamera.position.z + 3);
-					  meshCopy.isPickable;
+                      meshCopy.isPickable;
+                      meshCopy.setEnabled(true);
+                      meshCopy.getChildMeshes().forEach(mesh => mesh.setEnabled(true));
 					  this.count = this.count + 1;
 					  /*var meshChildren = meshCopy.getChildMeshes();
 					  if(meshCopy.name == "sphere"){
