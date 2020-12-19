@@ -615,6 +615,57 @@ class Game
             this.clearCanvas();
         });
 
+        // Create a test button
+        var deleteButton = new Button3D("deleteButton");
+        guiManager.addControl(deleteButton);
+
+        // This must be done after addControl to overwrite the default content
+        deleteButton.position = new Vector3(0, 0.6, 4);
+        deleteButton.scaling.y = .5;
+
+        // Link a transform node so we can move the button around
+        var deleteButtonTransform = new TransformNode("deleteButtonTransform", this.scene);
+       deleteButtonTransform.rotation.y = 15 * Math.PI / 180;
+	   deleteButtonTransform.setParent(this.drawingCanvas);
+        deleteButton.linkToTransformNode(deleteButtonTransform);
+
+        // Create the test button text
+        var deleteButtonText = new TextBlock();
+        deleteButtonText.text = "Delete Mesh";
+        deleteButtonText.color = "white";
+        deleteButtonText.fontSize = 24;
+        deleteButtonText.scaleY = 2;
+        deleteButton.content = deleteButtonText;
+
+
+        // Type cast the button material so we can change the color
+        var deleteButtonMaterial = <StandardMaterial>deleteButton.mesh!.material;
+
+        // Custom background color
+        backgroundColor = new Color3(.284, .73, .831);
+        deleteButtonMaterial.diffuseColor = backgroundColor;
+        deleteButton.pointerOutAnimation = () => {
+           deleteButtonMaterial.diffuseColor = backgroundColor;
+        }
+
+        // Custom hover color
+        deleteButton.pointerEnterAnimation = () => {
+           deleteButtonMaterial.diffuseColor = hoverColor;
+        }
+
+        deleteButton.onPointerDownObservable.add(() => {
+            if(this.selectedObjectL){
+			  this.selectedObjectL.setParent(null);
+			  this.selectedObjectL.dispose();
+			  this.selectedObjectL = null;
+			}
+			else if(this.selectedObjectR){
+			  this.selectedObjectR.setParent(null);
+			  this.selectedObjectR.dispose();
+			  this.selectedObjectR = null;
+			}
+        });
+        
         // Manually create a plane for adding static text
         var staticTextPlane = MeshBuilder.CreatePlane("textPlane", {}, this.scene);
         staticTextPlane.position.y = 1.6;

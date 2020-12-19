@@ -2,7 +2,7 @@
 
 **Due: Friday, December 18, 10:00pm CDT**
 
-This project allows users to create a Christmas themed scene by using their Oculus Quest controllers to draw a variety of objects on a canvas in the virtual environment, which the "Medium" software ( medium.com/tensorflow/train-on-google-colab-and-run-on-the-browser-a-case-study-8a45f9b1474e) this project is built upon then uses to predict which mesh the user wanted to draw. After confirming that this predictiotion is correct, this mesh is then placed in the scene.
+This project allows users to create a Christmas themed scene by using their Oculus Quest controllers to draw a variety of objects on a canvas in the virtual environment, which the "Medium" software ( medium.com/tensorflow/train-on-google-colab-and-run-on-the-browser-a-case-study-8a45f9b1474e) this project is built upon then uses to predict which mesh the user wanted to draw. After confirming that this prediction is correct, this mesh is then placed in the scene.
 
 
 Name: Kathryn Altpeter, Quynh Do
