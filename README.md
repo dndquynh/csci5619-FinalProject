@@ -13,18 +13,20 @@ UMN Email:
 
 Build URL:
 
-Third Party Assets: Cat Model: https://sketchfab.com/3d-models/sleeping-cat-3f7608e2b6b248bf83db09fb21125c2b
-					Star Model: https://sketchfab.com/3d-models/star-630cd2c1dbcf486da2777244300fed5b
-					Table Model: https://sketchfab.com/3d-models/low-poly-table-d33bd88ed7f146669129d253593e7aee
-					Flower Model:https://sketchfab.com/3d-models/low-poly-flowers-857802babfd542e094e8ef2c396be360
-                                        Ice Cream Model: https://sketchfab.com/3d-models/icecream-low-poly-game-ready-5736985d6deb4af0a4e2c0ba885f72f8
-                                        Snowflake: https://sketchfab.com/3d-models/snowflake-5cb68fa2bd1a43eca4f0fc7f5c676a8d
-                                        Snowman: https://sketchfab.com/3d-models/low-poly-snowman-d717ec46652147989c5b90a3a9a0bc6a
-                                        Cookie: https://sketchfab.com/3d-models/cookie-34e918d15a9d4fe9bb85bcf72c396191
-                                        Crown: https://clara.io/view/76586211-ecd9-4ba6-a1ba-7aa95c242b3a#
-                                        Bear: https://clara.io/view/d9f1b4f8-d8c7-48e5-bf66-212c8f23c291#
-                                        Broom: https://sketchfab.com/3d-models/witches-broom-f0512795f99446739905a8f6e41b837c
-                                        Tree: https://sketchfab.com/3d-models/my-first-christmas-tree-low-poly-bd6814852a314ecab4320232844de1d5
+Third Party Assets:
+* Cat Model: https://sketchfab.com/3d-models/sleeping-cat-3f7608e2b6b248bf83db09fb21125c2b
+* Star Model: https://sketchfab.com/3d-models/star-630cd2c1dbcf486da2777244300fed5b
+* Table Model: https://sketchfab.com/3d-models/low-poly-table-d33bd88ed7f146669129d253593e7aee
+* Flower Model:https://sketchfab.com/3d-models/low-poly-flowers-857802babfd542e094e8ef2c396be360
+* Ice Cream Model: https://sketchfab.com/3d-models/icecream-low-poly-game-ready-5736985d6deb4af0a4e2c0ba885f72f8
+* Snowflake: https://sketchfab.com/3d-models/snowflake-5cb68fa2bd1a43eca4f0fc7f5c676a8d
+* Cookie: https://assetstore.unity.com/packages/3d/props/food/christmas-cookies-breakable-105913
+* Crown: https://clara.io/view/76586211-ecd9-4ba6-a1ba-7aa95c242b3a#
+* Bear: https://assetstore.unity.com/packages/3d/props/free-christmas-presents-low-poly-24356
+* Broom: https://assetstore.unity.com/packages/3d/environments/fantasy/free-cartoon-halloween-pack-mobile-vr-45896
+* Tree: https://sketchfab.com/3d-models/my-first-christmas-tree-low-poly-bd6814852a314ecab4320232844de1d5
+* Candy cane: https://assetstore.unity.com/packages/3d/props/free-christmas-assets-low-poly-13102
+* Candle, sock, snowman: https://assetstore.unity.com/packages/3d/props/interior/christmas-toys-106607
 
 
 Make sure to document all third party assets. ***Be aware that points will be deducted for using third party assets that are not properly documented.***
