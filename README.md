@@ -48,7 +48,7 @@ Third Party Assets:
 * Drawing recognition model tutorial:
 
     * Blog post: medium.com/tensorflow/train-on-google-colab-and-run-on-the-browser-a-case-study-8a45f9b1474e
-    * Github code for image processing and predicting (lines 669 - 748 in our code, including these functions: getBoundingBox(), getImageData(), preprocess(), predictResult()): https://github.com/zaidalyafeai/zaidalyafeai.github.io/blob/master/sketcher/main.js
+    * Github code for image processing and predicting (lines 739 - 818 in our code, including these functions: getBoundingBox(), getImageData(), preprocess(), predictResult()): https://github.com/zaidalyafeai/zaidalyafeai.github.io/blob/master/sketcher/main.js
     * We tweak the functions a bit to make it work with our code, however, the main parts are from the tutorial.
 * Dataset used to train the model: https://github.com/googlecreativelab/quickdraw-dataset
 

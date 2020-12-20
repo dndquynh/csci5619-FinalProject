@@ -1,5 +1,5 @@
 /* CSCI 5619 Final, Fall 2020
- * Author: Evan Suma Rosenberg
+ * Author: Quynh Do, Kathryn Altpether
  * License: Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
  */
 
@@ -161,7 +161,6 @@ class Game
 
         // Disable teleportation and the laser pointer
         xrHelper.teleportation.dispose();
-        // xrHelper.pointerSelection.dispose();
 
         // Assign the xrCamera to a member variable
         this.xrCamera = xrHelper.baseExperience.camera;
@@ -233,8 +232,6 @@ class Game
             {
 				this.laserPointer!.parent = null;
                 this.laserPointer!.visibility = 0;
-                // this.laserPointer!.parent = null;
-                // this.laserPointer!.visibility = 0;
             }
             if (inputSource.uniqueId.endsWith("left")) {
                 this.laserPointer!.parent = null;
@@ -472,8 +469,9 @@ class Game
         guiManager.addControl(testButton);
 
         // This must be done after addControl to overwrite the default content
-        testButton.position = new Vector3(0, 1.6, 3);
+        testButton.position = new Vector3(0, 1.6, 4.9);
         testButton.scaling.y = .5;
+
 
         // Link a transform node so we can move the button around
         var testButtonTransform = new TransformNode("testButtonTransform", this.scene);
@@ -515,7 +513,7 @@ class Game
         guiManager.addControl(confirmButton);
 
         // This must be done after addControl to overwrite the default content
-        confirmButton.position = new Vector3(0, 1.0, 3);
+        confirmButton.position = new Vector3(0, 1.0, 4.9);
         confirmButton.scaling.y = .5;
 
         // Link a transform node so we can move the button around
@@ -579,12 +577,12 @@ class Game
         guiManager.addControl(clearCanvasButton);
 
         // This must be done after addControl to overwrite the default content
-        clearCanvasButton.position = new Vector3(0, 1.6, 3);
+        clearCanvasButton.position = new Vector3(0, 1.6, 4.9);
         clearCanvasButton.scaling.y = .5;
 
         // Link a transform node so we can move the button around
         var clearCanvasButtonTransform = new TransformNode("clearCanvasButtonTransform", this.scene);
-        clearCanvasButtonTransform.rotation.y = 15 * Math.PI / 180;
+        clearCanvasButtonTransform.rotation.y = 25 * Math.PI / 180;
         clearCanvasButton.linkToTransformNode(clearCanvasButtonTransform);
 
         // Create the test button text
@@ -625,8 +623,10 @@ class Game
 
         // Link a transform node so we can move the button around
         var deleteButtonTransform = new TransformNode("deleteButtonTransform", this.scene);
-       deleteButtonTransform.rotation.y = 15 * Math.PI / 180;
-	   deleteButtonTransform.setParent(this.drawingCanvas);
+        // deleteButtonTransform.rotation.y = 15 * Math.PI / 180;
+        deleteButtonTransform.setParent(this.drawingCanvas);
+        deleteButtonTransform.position.y = -1.5;
+        deleteButtonTransform.position.x = 0;
         deleteButton.linkToTransformNode(deleteButtonTransform);
 
         // Create the test button text
@@ -665,13 +665,13 @@ class Game
 			  this.selectedObjectR = null;
 			}
         });
-        
+
         // Manually create a plane for adding static text
         var staticTextPlane = MeshBuilder.CreatePlane("textPlane", {}, this.scene);
-        staticTextPlane.position.y = 1.6;
-        staticTextPlane.position.z = 1;
-        staticTextPlane.position.x = 1;
-
+        staticTextPlane.position.y = 1.8;
+        staticTextPlane.position.z = 3;
+        staticTextPlane.position.x = 2;
+        staticTextPlane.rotation.y = 25 * Math.PI / 180;
         staticTextPlane.isPickable = false;
 
         // Create a dynamic texture for adding GUI controls
@@ -681,9 +681,28 @@ class Game
         var staticText = new TextBlock();
         staticText.text = "Hello world!";
         staticText.color = "white";
-        staticText.fontSize = 20;
+        staticText.fontSize = 40;
         staticTextTexture.addControl(staticText);
         this.textBlock = staticText;
+
+        var descriptionPlane = MeshBuilder.CreatePlane("descriptionPlane", {}, this.scene);
+        descriptionPlane.position.y = 1.4;
+        descriptionPlane.position.z = 3.5;
+        descriptionPlane.position.x = -1.5;
+        descriptionPlane.rotation.y = -25 * Math.PI / 180;
+
+        descriptionPlane.isPickable = false;
+
+        // Create a dynamic texture for adding GUI controls
+        var staticDescriptionTexture = AdvancedDynamicTexture.CreateForMesh(descriptionPlane, 600, 600);
+
+        // Create a static text block
+        var staticDescription = new TextBlock();
+        staticDescription.textWrapping = true;
+        staticDescription.text = "Available objects: snowman, lollipop, table, circle, snowflake, crown, cookie, star, ice cream, candle, sock, tree, flower, broom, bear.\nUse the trigger button to draw and use the squeeze button to grab and move the object. To delete an object, grab it and press the 'Delete mesh' button with the other controller. \n Have fun!";
+        staticDescription.color = "white";
+        staticDescription.fontSize = 40;
+        staticDescriptionTexture.addControl(staticDescription);
 
         // Make sure the environment and skybox is not pickable!
         environment!.ground!.isPickable = false;
@@ -814,7 +833,6 @@ class Game
 	if((this.xrCamera)&&(this.drawingCanvas)){
 		if(this.painting == false){
 			if(this.drawingCanvas.parent == null){
-			//   this.drawingCanvas.position = new Vector3(this.xrCamera.position.x, 0.6, this.xrCamera.position.z+5.0);
               this.drawingCanvas.setParent(this.xrCamera);
               this.drawingCanvas.position.y = -0.6;
               this.drawingCanvas.position.x = 0;
@@ -822,7 +840,6 @@ class Game
               this.drawingCanvas.rotation.y = 0;
               this.drawingCanvas.rotation.z = 0;
 			}
-			//this.drawingCanvas.position.y = 0.6;
 		}
 		else
 		{
@@ -863,7 +880,6 @@ class Game
                     var canvasPos = this.drawingCanvas!.getAbsolutePosition();
                     var pickPos = pickInfo!.pickedPoint;
                     var drawingPos = pickPos!.subtract(canvasPos);
-                    console.log("draw" + drawingPos);
 
                     // Convert to the drawing canvas local space
                     var m = new Matrix();
@@ -871,9 +887,6 @@ class Game
                     canvasPos = Vector3.TransformCoordinates(canvasPos, m);
                     pickPos = Vector3.TransformCoordinates(pickPos!, m);
                     drawingPos = pickPos!.subtract(canvasPos);
-                    // console.log('canvas' + canvasPos);
-                    // console.log('picked' + pickPos);
-                    // console.log("draw" + drawingPos);
 
                     if (!this.painting) {
                         console.log("trigger down");
@@ -909,7 +922,6 @@ class Game
                 // Deselect the currently selected object
                 if(this.selectedObjectL)
                 {
-                   // this.selectedObject.disableEdgesRendering();
 				    this.selectedObjectL.setParent(null);
                     this.selectedObjectL = null;
                 }
@@ -918,7 +930,6 @@ class Game
                 if((pickInfo?.hit)&&(pickInfo!.pickedMesh!.name != "plane"))
                 {
                     this.selectedObjectL = pickInfo!.pickedMesh;
-                    //this.selectedObjectL!.enableEdgesRendering();
 
                     // Parent the object to the transform on the laser pointer
                     this.selectionTransformL!.position = new Vector3(0, 0, pickInfo.distance);
@@ -969,7 +980,6 @@ class Game
                     var canvasPos = this.drawingCanvas!.getAbsolutePosition();
                     var pickPos = pickInfo!.pickedPoint;
                     var drawingPos = pickPos!.subtract(canvasPos);
-                    // console.log("draw" + drawingPos);
 
                     // Convert to the drawing canvas local space
                     var m = new Matrix();
@@ -977,17 +987,12 @@ class Game
                     canvasPos = Vector3.TransformCoordinates(canvasPos, m);
                     pickPos = Vector3.TransformCoordinates(pickPos!, m);
                     drawingPos = pickPos!.subtract(canvasPos);
-                    // console.log('canvas' + canvasPos);
-                    // console.log('picked' + pickPos);
-                    // console.log("draw" + drawingPos);
 
                     if (!this.painting) {
-                        console.log("trigger down");
                         this.painting = true;
                         this.posX = drawingPos.x * 150 + 150;
                         this.posY = -drawingPos.y * 150 + 150
                     } else {
-                        console.log("trigger move");
                         this.draw(drawingPos.x * 150 + 150, -drawingPos.y * 150 + 150);
                     }
                     this.points.push(new Vector2(drawingPos.x * 150 + 150, -drawingPos.y * 150 + 150));
@@ -1006,7 +1011,6 @@ class Game
         {
             if(component?.pressed)
             {
-               //this.laserPointer!.color = Color3.Green();
 
                 var ray = new Ray(this.rightController!.pointer.position, this.rightController!.pointer.forward, 10);
                 var pickInfo = this.scene.pickWithRay(ray);
@@ -1014,7 +1018,6 @@ class Game
                 // Deselect the currently selected object
                 if(this.selectedObjectR)
                 {
-                   // this.selectedObject.disableEdgesRendering();
 				   this.selectedObjectR.setParent(null);
                     this.selectedObjectR = null;
                 }
@@ -1023,7 +1026,6 @@ class Game
                 if((pickInfo?.hit)&& (pickInfo!.pickedMesh!.name != "plane"))
                 {
                     this.selectedObjectR = pickInfo!.pickedMesh;
-                   // this.selectedObject!.enableEdgesRendering();
 
                     // Parent the object to the transform on the laser pointer
                     this.selectionTransformR!.position = new Vector3(0, 0, pickInfo.distance);
@@ -1032,9 +1034,6 @@ class Game
             }
             else
             {
-                // Reset the laser pointer color
-                //this.laserPointer!.color = Color3.Blue();
-
                 // Release the object from the laser pointer
                 if(this.selectedObjectR)
                 {
